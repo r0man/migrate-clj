@@ -48,12 +48,10 @@
        (catch SQLException _ false)))
 
 (defn run []
-  (let [from-version (or (select-current-version) "")
-        to-version (last (sort (keys @*migrations*)))
-        direction (if (str<= from-version to-version ) :up :down)]
-    ;; (prn from-version)
-    ;; (prn to-version)
-    (doseq [migration (find-applicable from-version to-version)]
+  (let [current (or (select-current-version) "")
+        target (last (sort (keys @*migrations*)))
+        direction (if (str<= current target ) :up :down)]
+    (doseq [migration (find-applicable current target)]
       (info (str "Running migration: " (:name migration)))
       (info (str "      Description: " (:doc migration)))
       ((direction migration)))))
