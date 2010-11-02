@@ -1,10 +1,33 @@
-# migrate
+# MIGRATE-CLJ
 
-FIXME: write description
+Rails-like database migrations for Clojure.
 
 ## Usage
 
-FIXME: write
+ (use 'migrate.core)
+ (require '[clojure.contrib.sql :as sql])
+
+ (defmigration "2010-11-01 21:30:10"
+   "Create continent table."      
+   (sql/create-table
+    "continents"
+    [:id :string "PRIMARY KEY"])    
+   (sql/drop-table :continents))
+
+ (defmigration "2010-11-01 21:32:45"
+   "Create country table."    
+   (sql/create-table
+    "countries"
+    [:id :string "PRIMARY KEY"]
+    [:continent_id :string])    
+   (sql/drop-table :continents))
+
+ (sql/with-connection
+   {:classname "org.sqlite.JDBC"
+    :subprotocol "sqlite"
+    :subname "db/test.sqlite3"
+    :create true}
+   (run))
 
 ## Installation
 
@@ -12,6 +35,6 @@ FIXME: write
 
 ## License
 
-Copyright (C) 2010 FIXME
+Copyright (C) 2010 Roman Scherer
 
 Distributed under the Eclipse Public License, the same as Clojure.
