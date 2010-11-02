@@ -6,8 +6,9 @@
   (:use [clojure.contrib.def :only (defvar)]
         [clojure.contrib.logging :only (info)]))
 
+;; TODO: use db connection as key
 (defvar *migrations* (atom {})
-  "All migrations by name.")
+  "All migrations by database connection.") 
 
 (defvar migration-table "schema_migrations"
   "The table name for the migration metadata.")
