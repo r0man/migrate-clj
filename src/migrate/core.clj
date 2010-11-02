@@ -1,4 +1,6 @@
-(ns migrate.core
+(ns ^{:author "Roman Scherer"
+      :doc "" }
+  migrate.core 
   (:import java.sql.SQLException)
   (:require [clojure.contrib.sql :as sql])
   (:use [clojure.contrib.def :only (defvar)]
