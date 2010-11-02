@@ -24,7 +24,7 @@
       migration-table
       [:version :string "PRIMARY KEY NOT NULL"]
       [:description :string]
-      [:created_at :time]))
+      [:created_at :time "NOT NULL"]))
 
 (defn drop-migration-table
   "Drop the database table that holds the migration metadata."

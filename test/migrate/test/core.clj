@@ -100,7 +100,7 @@
   (is (thrown? SQLException (select-current-version)))
   (with-version-table
     (is (nil? (select-current-version)))
-    (sql/insert-records migration-table {:version "201011012120"})
-    (is (= (select-current-version) 201011012120))
-    (sql/insert-records migration-table {:version "201012012120"})
-    (is (= (select-current-version) 201012012120))))
+    (insert-migration (find-migration-by-version "2010-11-01 21:30:10"))
+    (is (= (select-current-version) "2010-11-01 21:30:10"))
+    (insert-migration (find-migration-by-version "2010-11-01 21:32:45"))
+    (is (= (select-current-version) "2010-11-01 21:32:45"))))
