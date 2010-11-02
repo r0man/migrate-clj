@@ -31,7 +31,11 @@
 (defn insert-migration
   "Insert the migration's metadata into the database."
   [migration]  
-  (sql/insert-records migration-table (-> migration (dissoc :up :down))))
+  (sql/insert-records
+   migration-table
+   (-> migration
+       (assoc :created_at (java.util.Date.))
+       (dissoc :up :down))))
 
 (defn delete-migration
   "Delete the migration's metadata from the database."
