@@ -1,14 +1,11 @@
-(ns ^{:author "Roman Scherer"
-      :doc "" }
-  migrate.core 
+(ns migrate.core 
   (:import java.sql.SQLException)
   (:require [clojure.contrib.sql :as sql])
   (:use [clojure.contrib.def :only (defvar)]
         [clojure.contrib.logging :only (info)]))
 
-;; TODO: use db connection as key
 (defvar *migrations* (atom {})
-  "All migrations by database connection.") 
+  "All migrations by database connection.")
 
 (defvar migration-table "schema_migrations"
   "The table name for the migration metadata.")
@@ -59,13 +56,15 @@
 (defn find-applicable-migrations
   "Returns all migrations that have to be run to migrate from
   from-version to to-version."
-  [from-version to-version]
-  (let [from-version (or from-version "")
-        to-version (:version (latest-migration))]
-    (if (str<= from-version to-version)
-      (filter #(and (str< from-version (:version %)) (str<= (:version %) to-version))
-              (sort-by :version (vals @*migrations*)))
-      (reverse (find-applicable-migrations to-version from-version)))))
+  [migrations from-version to-version]  
+  (if (or (nil? from-version)
+          (and to-version (str<= from-version to-version)))
+    (filter #(and (or (nil? from-version)
+                      (str< from-version (:version %)))
+                  (or (nil? to-version)
+                      (str<= (:version %) to-version)))
+            (sort-by :version migrations))
+    (reverse (find-applicable-migrations migrations to-version from-version))))
 
 (defn find-migration-by-version
   "Returns the migration with the given version."
@@ -87,6 +86,7 @@
   "Run the migration by invoking the fn stored under the :up key and
   insert the metadata into the migration table."
   [migration]
+  (info (str "Migrating up: " (:version migration)))
   ((:up migration))
   (insert-migration migration))
 
@@ -94,21 +94,26 @@
   "Run the migration by invoking the fn stored under the :down key and
   delete the metadata into the migration table."
   [migration]
+  (info (str "Migrating down: " (:version migration)))
   ((:down migration))
   (delete-migration migration))
 
+(defn- direction [current-version target-version]
+  (if (or (nil? current-version) (str<= current-version target-version ))
+    :up :down))
+
 (defn run
-  "Run the migrations from the current to the target version. If
-  target version is nil the migartions run up to the latest version."
+  "Run all database migrations to get from the current to the target
+  version. Providing 0 as the target version runs all migrations down
+  starting with the current."
   [& [target-version]]
   (if-not (migration-table?)
     (create-migration-table))
-  (let [current-version (or (select-current-version) "")
-        target-version (or target-version (latest-version))]
+  (let [current-version (select-current-version)
+        target-version (or (and (= target-version 0) "") target-version (latest-version))]
     (sql/transaction
-     (doseq [migration (find-applicable-migrations current-version target-version)]
-       (info (str "Running migration: " (:version migration)))
-       (info (str "      Description: " (:description migration)))
-       (if (str<= current-version target-version )
+     (doseq [migration (find-applicable-migrations (vals @*migrations*) current-version target-version)]
+       (if (= (direction current-version target-version) :up)
          (run-up migration)
-         (run-down migration))))))
+         (run-down migration))
+       (info (str "   Description: " (:description migration)))))))

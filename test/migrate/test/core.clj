@@ -12,6 +12,29 @@
    :create true}
   "The database connection for the tests.")
 
+(defmigration "2010-11-01 21:30:10"
+  "Create continent table."      
+  (sql/create-table
+   "continents"
+   [:id :string "PRIMARY KEY"])    
+  (sql/drop-table "continents"))
+
+(defmigration "2010-11-02 14:12:45"
+  "Create country table."    
+  (sql/create-table
+   "countries"
+   [:id :string "PRIMARY KEY"]
+   [:continent_id :string])    
+  (sql/drop-table "countries"))
+
+(defmigration "2010-11-03 20:11:01"
+  "Create region table."    
+  (sql/create-table
+   "regions"
+   [:id :string "PRIMARY KEY"]
+   [:country_id :string])    
+  (sql/drop-table "regions"))
+
 (defmacro dbtest [name & body]
   `(deftest ~name
      (.delete (java.io.File. (:subname *database*)))
@@ -21,33 +44,19 @@
   `(try (do (create-migration-table) ~@body) 
         (finally (drop-migration-table))))
 
-(defmigration "2010-11-01 21:30:10"
-  "Create continent table."      
-  (sql/create-table
-   "continents"
-   [:id :string "PRIMARY KEY"])    
-  (sql/drop-table :continents))
-
-(defmigration "2010-11-01 21:32:45"
-  "Create country table."    
-  (sql/create-table
-   "countries"
-   [:id :string "PRIMARY KEY"]
-   [:continent_id :string])    
-  (sql/drop-table :continents))
-
 (deftest test-latest-migration
-  (is (= (latest-migration) (find-migration-by-version "2010-11-01 21:32:45"))))
+  (is (= (latest-migration) (find-migration-by-version "2010-11-03 20:11:01"))))
 
 (deftest test-latest-version
-  (is (= (latest-version) "2010-11-01 21:32:45")))
+  (is (= (latest-version) "2010-11-03 20:11:01")))
 
 (deftest test-find-migration-by-version
   (is (nil? (find-migration-by-version "unknown version")))
   (are [version]
     (is (= (:version (find-migration-by-version version)) version))
     "2010-11-01 21:30:10"
-    "2010-11-01 21:32:45"))
+    "2010-11-02 14:12:45"
+    "2010-11-03 20:11:01"))
 
 (dbtest test-create-migration-table
   (is (create-migration-table))
@@ -66,14 +75,14 @@
 
 (dbtest test-insert-migration
   (with-version-table
-    (doseq [version ["2010-11-01 21:30:10" "2010-11-01 21:32:45"]]
+    (doseq [version ["2010-11-01 21:30:10" "2010-11-02 14:12:45"]]
       (let [migration (find-migration-by-version version)]
         (insert-migration migration)
         (is (= (select-current-version) (:version migration)))))))
 
 (dbtest test-delete-migration
   (with-version-table
-    (let [migrations (map find-migration-by-version ["2010-11-01 21:30:10" "2010-11-01 21:32:45"])]
+    (let [migrations (map find-migration-by-version ["2010-11-01 21:30:10" "2010-11-02 14:12:45"])]
       (doall (map insert-migration migrations))
       (doseq [migration (reverse migrations)]
         (is (= (select-current-version) (:version migration)))
@@ -83,18 +92,47 @@
 
 (dbtest test-find-applicable-migrations
   (with-version-table
-    (are [from to expected]
-      (is (= (find-applicable-migrations from to)
-             (map find-migration-by-version expected)))
-      nil nil ["2010-11-01 21:30:10" "2010-11-01 21:32:45"]
-      ""  ""  ["2010-11-01 21:30:10" "2010-11-01 21:32:45"]      
-      nil "2010-11-01 21:32:45" ["2010-11-01 21:30:10" "2010-11-01 21:32:45"]
-      "" "2010-11-01 21:32:45" ["2010-11-01 21:30:10" "2010-11-01 21:32:45"]
-      "2010-11-01 21:30:10" "2010-11-01 21:32:45" ["2010-11-01 21:32:45"])))
+    (let [versions (map (fn [v] {:version v})
+                        ["2010-11-01 21:30:10" "2010-11-02 14:12:45" "2010-11-03 20:11:01"])]
+      (are [from to expected]
+        (is (= (map :version (find-applicable-migrations versions from to)) expected))
+        nil "2010-11-01 21:30:10"
+        ["2010-11-01 21:30:10"]
+        nil "2010-11-02 14:12:45"
+        ["2010-11-01 21:30:10" "2010-11-02 14:12:45"]
+        nil "2010-11-03 20:11:01"
+        ["2010-11-01 21:30:10" "2010-11-02 14:12:45" "2010-11-03 20:11:01"]
+        "2010-11-01 21:30:10" "2010-11-02 14:12:45"
+        ["2010-11-02 14:12:45"]
+        "2010-11-02 14:12:45" "2010-11-01 21:30:10"
+        ["2010-11-02 14:12:45"]
+        "2010-11-03 20:11:01" nil
+        ["2010-11-03 20:11:01" "2010-11-02 14:12:45" "2010-11-01 21:30:10"]
+        "2010-11-03 20:11:01" "2010-11-01 21:30:10"
+        ["2010-11-03 20:11:01" "2010-11-02 14:12:45"]
+        "2010-11-03 20:11:01" "2010-11-02 14:12:45"
+        ["2010-11-03 20:11:01"]))))
 
-(dbtest test-run  
+(dbtest test-run-all-up
   (run)
   (is (= (select-current-version) (:version (latest-migration)))))
+
+(dbtest test-run-up-to
+  (doseq [version (sort (map :version (vals @*migrations*)))]
+    (run version)
+    (is (= (select-current-version) version))))
+
+(dbtest test-run-down-to
+  (run)
+  (doseq [version (reverse (sort (map :version (vals @*migrations*))))]
+    (run version)
+    (is (= (select-current-version) version))))
+
+(dbtest test-run-all-down
+  (run)
+  (is (= (select-current-version) (:version (latest-migration))))
+  (run 0)
+  (is (nil? (select-current-version))))
 
 (dbtest test-select-current-version
   (is (thrown? SQLException (select-current-version)))
@@ -102,5 +140,5 @@
     (is (nil? (select-current-version)))
     (insert-migration (find-migration-by-version "2010-11-01 21:30:10"))
     (is (= (select-current-version) "2010-11-01 21:30:10"))
-    (insert-migration (find-migration-by-version "2010-11-01 21:32:45"))
-    (is (= (select-current-version) "2010-11-01 21:32:45"))))
+    (insert-migration (find-migration-by-version "2010-11-02 14:12:45"))
+    (is (= (select-current-version) "2010-11-02 14:12:45"))))
