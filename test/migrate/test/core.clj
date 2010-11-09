@@ -10,35 +10,49 @@
    :subprotocol "sqlite",
    :subname "db/test.sqlite3"
    :create true}
-  "The database connection for the tests.")
+  "The SQLite 3 database connection for the tests.")
+
+;; (defvar *database*
+;;   {:classname "org.postgresql.Driver"
+;;    :subprotocol "postgresql"
+;;    :subname "//localhost/migrate_test"
+;;    :user "migrate"
+;;    :password "migrate"}
+;;   "The PostgreSQL database connection for the tests.")
 
 (defmigration "2010-11-01 21:30:10"
   "Create continent table."      
   (sql/create-table
    "continents"
-   [:id :string "PRIMARY KEY"])    
+   [:id :text "PRIMARY KEY"])    
   (sql/drop-table "continents"))
 
 (defmigration "2010-11-02 14:12:45"
   "Create country table."    
   (sql/create-table
    "countries"
-   [:id :string "PRIMARY KEY"]
-   [:continent_id :string])    
+   [:id :text "PRIMARY KEY"]
+   [:continent_id :text])    
   (sql/drop-table "countries"))
 
 (defmigration "2010-11-03 20:11:01"
   "Create region table."    
   (sql/create-table
    "regions"
-   [:id :string "PRIMARY KEY"]
-   [:country_id :string])    
+   [:id :text "PRIMARY KEY"]
+   [:country_id :text])    
   (sql/drop-table "regions"))
+
+(defn cleanup-db []
+  (doseq [table ["regions" "countries" "continents" "schema_migrations"]]
+    (try (sql/do-commands (str "DROP TABLE IF EXISTS " table))
+         (catch Exception _ nil))))
 
 (defmacro dbtest [name & body]
   `(deftest ~name
-     (.delete (java.io.File. (:subname *database*)))
-     (sql/with-connection *database* ~@body)))
+     (sql/with-connection *database*
+       (cleanup-db)
+       ~@body)))
 
 (defmacro with-version-table [& body]
   `(try (do (create-migration-table) ~@body) 
@@ -50,7 +64,7 @@
 (deftest test-latest-version
   (is (= (latest-version) "2010-11-03 20:11:01")))
 
-(deftest test-find-migration-by-version
+(deftest test-find-migration-by-versions
   (is (nil? (find-migration-by-version "unknown version")))
   (are [version]
     (is (= (:version (find-migration-by-version version)) version))
@@ -92,8 +106,7 @@
 
 (dbtest test-find-applicable-migrations
   (with-version-table
-    (let [versions (map (fn [v] {:version v})
-                        ["2010-11-01 21:30:10" "2010-11-02 14:12:45" "2010-11-03 20:11:01"])]
+    (let [versions (map (fn [v] {:version v}) ["2010-11-01 21:30:10" "2010-11-02 14:12:45" "2010-11-03 20:11:01"])]
       (are [from to expected]
         (is (= (map :version (find-applicable-migrations versions from to)) expected))
         nil "2010-11-01 21:30:10"
