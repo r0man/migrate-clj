@@ -20,8 +20,8 @@
   "Create the database table that holds the migration metadata."
   [] (sql/create-table
       migration-table
-      [:version :string "PRIMARY KEY NOT NULL"]
-      [:description :string]
+      [:version :text "PRIMARY KEY NOT NULL"]
+      [:description :text]
       [:created_at :time "NOT NULL"]))
 
 (defn drop-migration-table
