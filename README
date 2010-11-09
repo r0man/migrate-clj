@@ -11,15 +11,15 @@ Rails-like database migrations for Clojure.
  "Create continent table."      
  (sql/create-table
   "continents"
-  [:id :string "PRIMARY KEY"])    
+  [:id :text "PRIMARY KEY"])    
  (sql/drop-table :continents))
 
 (defmigration "2010-11-01 21:32:45"
  "Create country table."    
  (sql/create-table
   "countries"
-  [:id :string "PRIMARY KEY"]
-  [:continent_id :string])    
+  [:id :text "PRIMARY KEY"]
+  [:continent_id :text])    
  (sql/drop-table :continents))
 
 (sql/with-connection
@@ -28,10 +28,6 @@ Rails-like database migrations for Clojure.
   :subname "db/test.sqlite3"
   :create true}
  (run))
-
-## Installation
-
-FIXME: write
 
 ## License
 
