@@ -8,8 +8,6 @@
   :url "http://github.com/r0man/migrate-clj"
   :dependencies [[org.clojure/clojure "1.2.0"]
                  [org.clojure/clojure-contrib "1.2.0"]]
-  :dev-dependencies [[org.clojars.rayne/autodoc "0.8.0-SNAPSHOT"]
-                     [log4j "1.2.15" :exclusions [javax.mail/mail javax.jms/jms com.sun.jdmk/jmxtools com.sun.jmx/jmxri]]
+  :dev-dependencies [[log4j "1.2.15" :exclusions [javax.mail/mail javax.jms/jms com.sun.jdmk/jmxtools com.sun.jmx/jmxri]]
                      [org.xerial/sqlite-jdbc "3.6.20.1"]
-                     [postgresql/postgresql "8.4-701.jdbc4"]
-                     [swank-clojure "1.2.1"]])
+                     [postgresql/postgresql "8.4-701.jdbc4"]])
