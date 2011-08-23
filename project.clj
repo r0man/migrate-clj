@@ -1,4 +1,4 @@
-(defproject migrate "0.0.1-SNAPSHOT"
+(defproject migrate "0.0.2-SNAPSHOT"
   :description "Rails-like Database Migrations for Clojure"
   :autodoc {:name "Rails-like Database Migrations for Clojure"
             :author "Roman Scherer"
@@ -7,7 +7,8 @@
             :copyright "Copyright (c) 2010 Roman Scherer"}
   :url "http://github.com/r0man/migrate-clj"
   :dependencies [[org.clojure/clojure "1.2.0"]
+                 [org.clojure/java.jdbc "0.0.5"]
                  [org.clojure/clojure-contrib "1.2.0"]]
   :dev-dependencies [[log4j "1.2.15" :exclusions [javax.mail/mail javax.jms/jms com.sun.jdmk/jmxtools com.sun.jmx/jmxri]]
-                     [org.xerial/sqlite-jdbc "3.6.20.1"]
+                     [org.xerial/sqlite-jdbc "3.7.2"]
                      [postgresql/postgresql "8.4-701.jdbc4"]])

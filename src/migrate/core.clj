@@ -1,6 +1,6 @@
-(ns migrate.core 
+(ns migrate.core
   (:import java.sql.SQLException)
-  (:require [clojure.contrib.sql :as sql])
+  (:require [clojure.java.jdbc :as sql])
   (:use [clojure.contrib.def :only (defvar)]
         [clojure.contrib.logging :only (info)]))
 
@@ -30,7 +30,7 @@
 
 (defn insert-migration
   "Insert the migration's metadata into the database."
-  [migration]  
+  [migration]
   (sql/insert-records
    migration-table
    (-> migration
@@ -56,7 +56,7 @@
 (defn find-applicable-migrations
   "Returns all migrations that have to be run to migrate from
   from-version to to-version."
-  [migrations from-version to-version]  
+  [migrations from-version to-version]
   (if (or (nil? from-version)
           (and to-version (str<= from-version to-version)))
     (filter #(and (or (nil? from-version)
@@ -90,7 +90,7 @@
   ((:up migration))
   (insert-migration migration))
 
-(defn- run-down 
+(defn- run-down
   "Run the migration by invoking the fn stored under the :down key and
   delete the metadata into the migration table."
   [migration]

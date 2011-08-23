@@ -1,6 +1,6 @@
 (ns migrate.test.core
   (:import [java.sql DriverManager SQLException])
-  (:require [clojure.contrib.sql :as sql])
+  (:require [clojure.java.jdbc :as sql])
   (:use [migrate.core] :reload)
   (:use [clojure.contrib.def :only (defvar)]
         clojure.test))
@@ -12,35 +12,35 @@
    :create true}
   "The SQLite 3 database connection for the tests.")
 
-;; (defvar *database*
-;;   {:classname "org.postgresql.Driver"
-;;    :subprotocol "postgresql"
-;;    :subname "//localhost/migrate_test"
-;;    :user "migrate"
-;;    :password "migrate"}
-;;   "The PostgreSQL database connection for the tests.")
+(defvar *database*
+  {:classname "org.postgresql.Driver"
+   :subprotocol "postgresql"
+   :subname "//localhost/migrate_test"
+   :user "migrate"
+   :password "migrate"}
+  "The PostgreSQL database connection for the tests.")
 
 (defmigration "2010-11-01 21:30:10"
-  "Create continent table."      
+  "Create continent table."
   (sql/create-table
    "continents"
-   [:id :text "PRIMARY KEY"])    
+   [:id :text "PRIMARY KEY"])
   (sql/drop-table "continents"))
 
 (defmigration "2010-11-02 14:12:45"
-  "Create country table."    
+  "Create country table."
   (sql/create-table
    "countries"
    [:id :text "PRIMARY KEY"]
-   [:continent_id :text])    
+   [:continent_id :text])
   (sql/drop-table "countries"))
 
 (defmigration "2010-11-03 20:11:01"
-  "Create region table."    
+  "Create region table."
   (sql/create-table
    "regions"
    [:id :text "PRIMARY KEY"]
-   [:country_id :text])    
+   [:country_id :text])
   (sql/drop-table "regions"))
 
 (defn cleanup-db []
@@ -55,7 +55,7 @@
        ~@body)))
 
 (defmacro with-version-table [& body]
-  `(try (do (create-migration-table) ~@body) 
+  `(try (do (create-migration-table) ~@body)
         (finally (drop-migration-table))))
 
 (deftest test-latest-migration
