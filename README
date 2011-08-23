@@ -2,24 +2,28 @@
 
 Rails-like database migrations for Clojure.
 
+## Installation
+
+Via Clojars: http://clojars.org/migrate-clj
+
 ## Usage
 
 (use 'migrate.core)
 (require '[clojure.contrib.sql :as sql])
 
 (defmigration "2010-11-01 21:30:10"
- "Create continent table."      
+ "Create continent table."
  (sql/create-table
   "continents"
-  [:id :text "PRIMARY KEY"])    
+  [:id :text "PRIMARY KEY"])
  (sql/drop-table :continents))
 
 (defmigration "2010-11-01 21:32:45"
- "Create country table."    
+ "Create country table."
  (sql/create-table
   "countries"
   [:id :text "PRIMARY KEY"]
-  [:continent_id :text])    
+  [:continent_id :text])
  (sql/drop-table :continents))
 
 (sql/with-connection
@@ -31,6 +35,6 @@ Rails-like database migrations for Clojure.
 
 ## License
 
-Copyright (C) 2010 Roman Scherer
+Copyright (C) 2011 Roman Scherer
 
 Distributed under the Eclipse Public License, the same as Clojure.
