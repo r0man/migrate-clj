@@ -4,3 +4,4 @@ autodoc
 lib
 classes
 /db/test.sqlite3
+/logs/debug.log
