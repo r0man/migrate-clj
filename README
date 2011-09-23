@@ -9,7 +9,7 @@ Via Clojars: http://clojars.org/migrate
 ## Usage
 
 (use 'migrate.core)
-(require '[clojure.contrib.sql :as sql])
+(require '[clojure.java.jdbc :as sql])
 
 (defmigration "2010-11-01 21:30:10"
  "Create continent table."
