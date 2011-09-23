@@ -1,20 +1,16 @@
 (ns migrate.core
   (:import java.sql.SQLException)
   (:require [clojure.java.jdbc :as sql])
-  (:use [clojure.contrib.def :only (defvar)]
-        [clojure.contrib.logging :only (info)]))
+  (:use [clojure.tools.logging :only (info)]))
 
-(defvar *migrations* (atom {})
-  "All migrations by database connection.")
+(def ^:dynamic *migrations* (atom {}))
+(def migration-table "schema_migrations")
 
-(defvar migration-table "schema_migrations"
-  "The table name for the migration metadata.")
+(defn str< [s1 s2]
+  (< (.compareTo s1 s2) 0))
 
-(defn str= [s1 s2] (= (.compareTo s1 s2) 0))
-(defn str< [s1 s2] (< (.compareTo s1 s2) 0))
-(defn str> [s1 s2] (> (.compareTo s1 s2) 0))
-(defn str<= [s1 s2] (<= (.compareTo s1 s2) 0))
-(defn str>= [s1 s2] (>= (.compareTo s1 s2) 0))
+(defn str<= [s1 s2]
+  (<= (.compareTo s1 s2) 0))
 
 (defn create-migration-table
   "Create the database table that holds the migration metadata."

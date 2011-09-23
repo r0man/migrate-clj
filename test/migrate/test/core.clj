@@ -2,23 +2,20 @@
   (:import [java.sql DriverManager SQLException])
   (:require [clojure.java.jdbc :as sql])
   (:use [migrate.core] :reload)
-  (:use [clojure.contrib.def :only (defvar)]
-        clojure.test))
+  (:use clojure.test))
 
-(defvar *database*
+(def ^:dynamic *database*
   {:classname "org.sqlite.JDBC",
    :subprotocol "sqlite",
    :subname "db/test.sqlite3"
-   :create true}
-  "The SQLite 3 database connection for the tests.")
+   :create true})
 
-(defvar *database*
+(def ^:dynamic *database*
   {:classname "org.postgresql.Driver"
    :subprotocol "postgresql"
    :subname "//localhost/migrate_test"
    :user "migrate"
-   :password "migrate"}
-  "The PostgreSQL database connection for the tests.")
+   :password "migrate"})
 
 (defmigration "2010-11-01 21:30:10"
   "Create continent table."

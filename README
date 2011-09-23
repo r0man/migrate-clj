@@ -4,7 +4,7 @@ Rails-like database migrations for Clojure.
 
 ## Installation
 
-Via Clojars: http://clojars.org/migrate-clj
+Via Clojars: http://clojars.org/migrate
 
 ## Usage
 
