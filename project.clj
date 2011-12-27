@@ -1,4 +1,4 @@
-(defproject migrate "0.0.4-SNAPSHOT"
+(defproject migrate "0.0.5"
   :description "Rails-like Database Migrations for Clojure"
   :autodoc {:name "Rails-like Database Migrations for Clojure"
             :author "Roman Scherer"
