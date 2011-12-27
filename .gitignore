@@ -3,6 +3,7 @@ pom.xml
 autodoc
 lib
 classes
+native
 /db/test.sqlite3
 /logs/debug.log
 /.lein-deps-sum
