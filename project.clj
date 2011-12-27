@@ -11,4 +11,4 @@
                  [org.clojure/tools.logging "0.2.3"]]
   :dev-dependencies [[org.slf4j/slf4j-log4j12 "1.5.10"]
                      [org.xerial/sqlite-jdbc "3.7.2"]
-                     [postgresql/postgresql "9.0-801.jdbc4"]])
+                     [postgresql/postgresql "9.1-901.jdbc4"]])
