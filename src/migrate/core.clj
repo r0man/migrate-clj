@@ -1,6 +1,6 @@
 (ns migrate.core
   (:import java.sql.SQLException)
-  (:require [clojure.java.jdbc :as sql])
+  (:require [clojure.java.jdbc :as jdbc])
   (:use [clojure.tools.logging :only (info)]))
 
 (def ^:dynamic *migrations* (atom {}))
@@ -14,7 +14,7 @@
 
 (defn create-migration-table
   "Create the database table that holds the migration metadata."
-  [] (sql/create-table
+  [] (jdbc/create-table
       migration-table
       [:version :text "PRIMARY KEY NOT NULL"]
       [:description :text]
@@ -22,12 +22,12 @@
 
 (defn drop-migration-table
   "Drop the database table that holds the migration metadata."
-  [] (sql/drop-table migration-table))
+  [] (jdbc/drop-table migration-table))
 
 (defn insert-migration
   "Insert the migration's metadata into the database."
   [migration]
-  (sql/insert-records
+  (jdbc/insert-records
    migration-table
    (-> migration
        (assoc :created_at (java.sql.Date. (.getTime (java.util.Date.))))
@@ -35,7 +35,7 @@
 
 (defn delete-migration
   "Delete the migration's metadata from the database."
-  [migration] (sql/delete-rows migration-table ["version=?" (:version migration)]))
+  [migration] (jdbc/delete-rows migration-table ["version=?" (:version migration)]))
 
 (defn latest-migration
   "Returns the latest (the most recent) migration."
@@ -44,6 +44,11 @@
 (defn latest-version
   "Returns the version of the latest (the most recent) migration."
   [] (:version (latest-migration)))
+
+(defn select-migrations []
+  (jdbc/with-query-results result-set
+    [(format "SELECT * FROM %s" migration-table)]
+    (into [] result-set)))
 
 (defmacro defmigration [name description up-form down-form]
   `(let [migration# {:version ~name :description ~description :up #(~@up-form) :down #(~@down-form)}]
@@ -69,7 +74,7 @@
 (defn select-current-version
   "Returns the current schema version, or nil if no migration has been
   run yet."
-  [] (sql/with-query-results result-set
+  [] (jdbc/with-query-results result-set
        [(str "SELECT MAX(version) AS version FROM " migration-table)]
        (:version (first result-set))))
 
@@ -107,7 +112,7 @@
     (create-migration-table))
   (let [current-version (select-current-version)
         target-version (or (and (= target-version 0) "") target-version (latest-version))]
-    (sql/transaction
+    (jdbc/transaction
      (doseq [migration (find-applicable-migrations (vals @*migrations*) current-version target-version)]
        (if (= (direction current-version target-version) :up)
          (run-up migration)
