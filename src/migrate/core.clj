@@ -30,7 +30,7 @@
   (jdbc/insert-records
    migration-table
    (-> migration
-       (assoc :created_at (java.sql.Date. (.getTime (java.util.Date.))))
+       (assoc :created_at (java.sql.Timestamp. (.getTime (java.util.Date.))))
        (dissoc :up :down))))
 
 (defn delete-migration
