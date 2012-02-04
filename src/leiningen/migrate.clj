@@ -3,15 +3,15 @@
         migrate.tasks))
 
 (defn status
-  "Show the status of all migrations."
+  "Show the status of the database migrations."
   [project & [env]] (print-migrations project env))
 
 (defn run
-  "Run all show migrations."
+  "Apply the necessary database migrations."
   [project & [version]] (run-migrations project version))
 
 (defn migrate
-  "Leiningen project environments."
+  "Leiningen database migrations."
   {:help-arglists '([status run])
    :subtasks [#'status #'run]}
   ([project]
