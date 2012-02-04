@@ -1,7 +1,8 @@
 (ns migrate.core
   (:import java.sql.SQLException)
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.tools.logging :only (info)]))
+  (:use [clojure.tools.logging :only (info)]
+        [leiningen.env.core :only (environment)]))
 
 (def ^:dynamic *migrations* (atom {}))
 (def migration-table "schema_migrations")
@@ -11,6 +12,11 @@
 
 (defn str<= [s1 s2]
   (<= (.compareTo s1 s2) 0))
+
+(defn format-time [date]
+  (if date
+    (let [formatter (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")]
+      (.format formatter date))))
 
 (defn create-migration-table
   "Create the database table that holds the migration metadata."
@@ -118,3 +124,10 @@
          (run-up migration)
          (run-down migration))
        (info (str "   Description: " (:description migration)))))))
+
+(defmacro with-connection
+  "Eval `body` within the context of the current environment's
+  database connection."
+  [& body]
+  `(jdbc/with-connection (:database (environment))
+     ~@body))

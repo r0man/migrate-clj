@@ -1,13 +1,11 @@
 (ns migrate.tasks
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [leiningen.env.core :only (environment set-environments! project-env variable-name)]
+  (:use [leiningen.env.core :only (set-environments!)]
         migrate.core))
 
-(defmacro with-connection [& body]
-  `(jdbc/with-connection (:database (environment))
-     ~@body))
-
-(defn load-migrations [project]
+(defn load-migrations
+  "Load the project's migration namespaces."
+  [project]
   (doseq [ns (:migrate project)]
     (require ns)))
 
@@ -17,15 +15,15 @@
   (with-connection
     (let [migrations (select-migrations)
           migrations (zipmap (map :version migrations) migrations)]
-      (println "VERSION              STATUS   WHEN                   DESCRIPTION")
+      (println "VERSION              STATUS   WHEN                 DESCRIPTION")
       (println "-----------------------------------------------------------------------------------------")
       (doseq [{:keys [description version]} (sort-by :version (vals @*migrations*))
               :let [migration (get migrations version)]]
         (-> (format
-             "%-20s %-8s %-22s %s"
+             "%-20s %-8s %-20s %s"
              version
              (if migration "DONE" "PENDING")
-             (or (:created_at migration) "-")
+             (or (format-time (:created_at migration)) "-")
              description)
             (println))))))
 

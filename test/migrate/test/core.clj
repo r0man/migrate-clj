@@ -2,7 +2,8 @@
   (:import [java.sql DriverManager SQLException])
   (:require [clojure.java.jdbc :as sql])
   (:use [migrate.core] :reload)
-  (:use clojure.test))
+  (:use clojure.test
+        migrate.examples))
 
 (def ^:dynamic *database*
   {:classname "org.sqlite.JDBC",
@@ -16,29 +17,6 @@
    :subname "//localhost/migrate_test"
    :user "migrate"
    :password "migrate"})
-
-(defmigration "2010-11-01 21:30:10"
-  "Create continent table."
-  (sql/create-table
-   "continents"
-   [:id :text "PRIMARY KEY"])
-  (sql/drop-table "continents"))
-
-(defmigration "2010-11-02 14:12:45"
-  "Create country table."
-  (sql/create-table
-   "countries"
-   [:id :text "PRIMARY KEY"]
-   [:continent_id :text])
-  (sql/drop-table "countries"))
-
-(defmigration "2010-11-03 20:11:01"
-  "Create region table."
-  (sql/create-table
-   "regions"
-   [:id :text "PRIMARY KEY"]
-   [:country_id :text])
-  (sql/drop-table "regions"))
 
 (defn cleanup-db []
   (doseq [table ["regions" "countries" "continents" "schema_migrations"]]
@@ -68,6 +46,9 @@
     "2010-11-01 21:30:10"
     "2010-11-02 14:12:45"
     "2010-11-03 20:11:01"))
+
+(deftest test-format-time
+  (is (= "1970-01-01 01:00:00" (format-time (java.util.Date. 0)))))
 
 (dbtest test-create-migration-table
   (is (create-migration-table))

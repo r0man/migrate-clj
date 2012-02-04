@@ -17,5 +17,4 @@
                      [org.slf4j/slf4j-log4j12 "1.5.10"]
                      [org.xerial/sqlite-jdbc "3.7.2"]
                      [postgresql/postgresql "9.1-901.jdbc4"]]
-  :hooks [leiningen.hooks.env]
   :migrate [migrate.examples])
