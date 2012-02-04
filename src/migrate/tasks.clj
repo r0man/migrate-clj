@@ -16,7 +16,7 @@
     (let [migrations (select-migrations)
           migrations (zipmap (map :version migrations) migrations)]
       (println "VERSION              STATUS   WHEN                 DESCRIPTION")
-      (println "-----------------------------------------------------------------------------------------")
+      (println (apply str (repeat 80 "-")))
       (doseq [{:keys [description version]} (sort-by :version (vals @*migrations*))
               :let [migration (get migrations version)]]
         (-> (format
