@@ -18,5 +18,6 @@
                                   [org.slf4j/slf4j-log4j12 "1.5.6"]
                                   [postgresql/postgresql "9.1-901.jdbc4"]]}}
   :plugins [[lein-env "0.0.3-SNAPSHOT"]]
+  :hooks [leiningen.hooks.env]
   :min-lein-version "2.0.0"
   :migrate [migrate.examples])
