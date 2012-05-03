@@ -1,2 +1,12 @@
 language: clojure
+
+before_script:
+  - "psql -c 'create database migrate_test;' -U postgres"
+  - "psql -c \"create user migrate UNENCRYPTED PASSWORD 'migrate'\" migrate_test -U postgres"
+
 lein: lein2
+
+postgres:
+  adapter: postgresql
+  database: migrate_test
+  username: postgres
