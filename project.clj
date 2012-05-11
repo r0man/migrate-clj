@@ -9,11 +9,11 @@
             :copyright "Copyright (c) 2010 Roman Scherer"}
   :dependencies [[lein-env "0.0.4-SNAPSHOT"]
                  [org.clojure/clojure "1.4.0"]
-                 [org.clojure/java.jdbc "0.2.0"]
+                 [org.clojure/java.jdbc "0.2.1"]
                  [org.clojure/tools.logging "0.2.3"]
                  [postgresql/postgresql "9.1-901.jdbc4"]]
   :profiles {:dev {:resource-paths ["test-resources"]
-                   :dependencies [[org.clojure/java.jdbc "0.2.0"]
+                   :dependencies [[org.clojure/java.jdbc "0.2.1"]
                                   [org.slf4j/slf4j-log4j12 "1.6.4"]
                                   [postgresql/postgresql "9.1-901.jdbc4"]]}}
   :eval-in :leiningen
