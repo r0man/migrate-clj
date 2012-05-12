@@ -2,6 +2,8 @@
   :description "Core migration library for use in applications"
   :url "http://github.com/r0man/migrate-clj"
   :min-lein-version "2.0.0"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[environ "0.2.1"]
                  [clj-time "0.4.2"]
                  [org.clojure/clojure "1.4.0"]

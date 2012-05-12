@@ -1,6 +1,9 @@
 (defproject migrate.lein "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "Leiningen plugin for Migrate"
+  :url "http://github.com/r0man/migrate-clj"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.3.0"]])
+  :dependencies [[environ/environ.lein "0.2.1"]
+                 [migrate/migrate.core "0.0.9-SNAPSHOT"]
+                 [org.clojure/clojure "1.4.0"]]
+  :eval-in-leiningen true)

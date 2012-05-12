@@ -4,9 +4,7 @@
         migrate.tasks))
 
 (defn- extended-project [project]
-  (-> (update-in project [:dependencies] conj ['migrate "0.0.9-SNAPSHOT"])
-      (update-in [:plugins] conj ['environ/environ.lein "0.2.1"])
-      (update-in [:hooks] conj 'environ.leiningen.hooks)))
+  (update-in project [:dependencies] conj ['migrate "0.0.9-SNAPSHOT"]))
 
 (defn status
   "Show the status of the database migrations."
