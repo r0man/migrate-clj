@@ -17,5 +17,4 @@
                                   [postgresql/postgresql "9.1-901.jdbc4"]]}}
   :eval-in :leiningen
   :plugins [[environ/environ.lein "0.2.1"]]
-  :hooks [environ.leiningen.hooks]
-  :migrate [migrate.examples])
+  :hooks [environ.leiningen.hooks])

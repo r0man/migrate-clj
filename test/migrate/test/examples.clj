@@ -1,4 +1,4 @@
-(ns migrate.examples
+(ns migrate.test.examples
   (:require [clojure.java.jdbc :as jdbc])
   (:use migrate.core))
 

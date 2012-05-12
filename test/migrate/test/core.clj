@@ -3,7 +3,7 @@
   (:require [clojure.java.jdbc :as sql])
   (:use clojure.test
         migrate.core
-        migrate.examples))
+        migrate.test.examples))
 
 (def ^:dynamic *database*
   {:classname "org.postgresql.Driver"
