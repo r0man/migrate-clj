@@ -3,6 +3,7 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use [clj-time.core :only (now)]
         [clj-time.coerce :only (to-date-time to-timestamp to-long)]
+        [clj-time.format :only (formatters unparse)]
         [clojure.tools.logging :only (info)]
         [clojure.string :only (blank?)]
         [environ.core :only (env)]))
@@ -17,9 +18,7 @@
   (<= (.compareTo s1 s2) 0))
 
 (defn format-time [date]
-  (if date
-    (let [formatter (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")]
-      (.format formatter date))))
+  (if date (unparse (formatters :date-time-no-ms) (to-date-time date))))
 
 (defn create-migration-table
   "Create the database table that holds the migration metadata."

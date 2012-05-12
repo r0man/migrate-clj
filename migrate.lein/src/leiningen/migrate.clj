@@ -1,13 +1,13 @@
 (ns leiningen.migrate
   (:use [leiningen.core.eval :only (eval-in-project)]
-        [leiningen.help :only (help-for)]
+        [leiningen.help :only (help help-for)]
         migrate.tasks))
 
 (defn- extended-project [project]
   (update-in project [:dependencies] conj ['migrate "0.0.9-SNAPSHOT"]))
 
 (defn status
-  "Show the status of the database migrations."
+  "Show the database migration status."
   [project]
   (eval-in-project
    (extended-project project)
@@ -15,7 +15,7 @@
    '(require 'migrate.tasks)))
 
 (defn run
-  "Run pending or a specific database migrations."
+  "Run pending database migrations."
   [project & [version]]
   (eval-in-project
    (extended-project project)
@@ -27,9 +27,9 @@
   {:help-arglists '([status run])
    :subtasks [#'status #'run]}
   ([project]
-     (migrate project "status"))
+     (run project nil))
   ([project subtask & args]
      (cond
-      (= "help" subtask) (println (help-for subtask))
       (= "run" subtask) (apply run project args)
-      :else (status project))))
+      (= "status" subtask) (status project)
+      :else (println (help-for subtask)))))

@@ -19,7 +19,7 @@
               :let [migration (get migrations version)]]
         (-> (format
              "%-20s %-8s %-20s %s"
-             version
+             (format-time version)
              (if migration "DONE" "PENDING")
              (or (format-time (:created_at migration)) "-")
              description)
