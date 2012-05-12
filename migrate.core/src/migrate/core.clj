@@ -55,6 +55,18 @@
   "Returns the version of the latest (the most recent) migration."
   [] (:version (latest-migration)))
 
+(defn select-current-version
+  "Returns the current schema version, or nil if no migration has been
+  run yet."
+  [] (jdbc/with-query-results result-set
+       [(str "SELECT MAX(version) AS version FROM " migration-table)]
+       (to-date-time (:version (first result-set)))))
+
+(defn migration-table? []
+  "Returns true if the migration-table exists, otherwise false."
+  (try (do (select-current-version) true)
+       (catch SQLException _ false)))
+
 (defn select-migrations []
   (if (migration-table?)
     (jdbc/with-query-results result-set
@@ -88,18 +100,6 @@
   (if-let [version (to-date-time version)]
     (first (filter #(= (:version %) version) (vals @*migrations*)))
     (throw (Exception. (str "Invalid migration version. Must be a timestamp: " version)))))
-
-(defn select-current-version
-  "Returns the current schema version, or nil if no migration has been
-  run yet."
-  [] (jdbc/with-query-results result-set
-       [(str "SELECT MAX(version) AS version FROM " migration-table)]
-       (to-date-time (:version (first result-set)))))
-
-(defn migration-table? []
-  "Returns true if the migration-table exists, otherwise false."
-  (try (do (select-current-version) true)
-       (catch SQLException _ false)))
 
 (defn- run-up
   "Run the migration by invoking the fn stored under the :up key and
