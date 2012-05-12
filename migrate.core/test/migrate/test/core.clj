@@ -129,3 +129,10 @@
     (is (= (to-date-time "2010-11-01T21:30:10") (select-current-version)))
     (insert-migration (find-migration-by-version "2010-11-02T14:12:45"))
     (is (= (to-date-time "2010-11-02T14:12:45") (select-current-version)))))
+
+(dbtest test-select-migrations
+  (is (nil? (select-migrations)))
+  (with-version-table
+    (is (= [] (select-migrations)))
+    (insert-migration (find-migration-by-version "2010-11-01T21:30:10"))
+    (is (= [(to-date-time "2010-11-01T21:30:10")] (map :version (select-migrations))))))

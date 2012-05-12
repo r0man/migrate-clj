@@ -56,9 +56,10 @@
   [] (:version (latest-migration)))
 
 (defn select-migrations []
-  (jdbc/with-query-results result-set
-    [(format "SELECT * FROM %s" migration-table)]
-    (into [] (map #(assoc %1 :version (to-date-time (:version %1))) result-set))))
+  (if (migration-table?)
+    (jdbc/with-query-results result-set
+      [(format "SELECT * FROM %s" migration-table)]
+      (into [] (map #(assoc %1 :version (to-date-time (:version %1))) result-set)))))
 
 (defmacro defmigration [version description up-form down-form]
   `(if-let [version# (to-date-time ~version)]
