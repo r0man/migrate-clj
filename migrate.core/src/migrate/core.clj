@@ -1,7 +1,9 @@
 (ns migrate.core
   (:import java.sql.SQLException)
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.tools.logging :only (info)]
+  (:use [clj-time.core :only (now)]
+        [clj-time.coerce :only (to-date-time to-timestamp to-long)]
+        [clojure.tools.logging :only (info)]
         [clojure.string :only (blank?)]
         [environ.core :only (env)]))
 
@@ -23,7 +25,7 @@
   "Create the database table that holds the migration metadata."
   [] (jdbc/create-table
       migration-table
-      [:version :text "PRIMARY KEY NOT NULL"]
+      [:version :timestamp "PRIMARY KEY NOT NULL"]
       [:description :text]
       [:created_at :timestamp "NOT NULL"]))
 
@@ -36,13 +38,14 @@
   [migration]
   (jdbc/insert-records
    migration-table
-   (-> migration
-       (assoc :created_at (java.sql.Timestamp. (.getTime (java.util.Date.))))
+   (-> (assoc migration
+         :created_at (to-timestamp (now))
+         :version (to-timestamp (:version migration)))
        (dissoc :up :down))))
 
 (defn delete-migration
   "Delete the migration's metadata from the database."
-  [migration] (jdbc/delete-rows migration-table ["version=?" (:version migration)]))
+  [migration] (jdbc/delete-rows migration-table ["version=?" (to-timestamp (:version migration))]))
 
 (defn latest-migration
   "Returns the latest (the most recent) migration."
@@ -55,35 +58,42 @@
 (defn select-migrations []
   (jdbc/with-query-results result-set
     [(format "SELECT * FROM %s" migration-table)]
-    (into [] result-set)))
+    (into [] (map #(assoc %1 :version (to-date-time (:version %1))) result-set))))
 
-(defmacro defmigration [name description up-form down-form]
-  `(let [migration# {:version ~name :description ~description :up #(~@up-form) :down #(~@down-form)}]
-     (swap! *migrations* assoc (:version migration#) migration#)))
+(defmacro defmigration [version description up-form down-form]
+  `(if-let [version# (to-date-time ~version)]
+     (let [migration# {:version version# :description ~description :up #(~@up-form) :down #(~@down-form)}]
+       (swap! *migrations* assoc (:version migration#) migration#))
+     (throw (Exception. (str "Invalid migration version. Must be a timestamp: " ~version)))))
 
 (defn find-applicable-migrations
   "Returns all migrations that have to be run to migrate from
   from-version to to-version."
   [migrations from-version to-version]
-  (if (or (nil? from-version)
-          (and to-version (str<= from-version to-version)))
-    (filter #(and (or (nil? from-version)
-                      (str< from-version (:version %)))
-                  (or (nil? to-version)
-                      (str<= (:version %) to-version)))
-            (sort-by :version migrations))
-    (reverse (find-applicable-migrations migrations to-version from-version))))
+  (let [from-version (to-long from-version)
+        to-version (to-long to-version)]
+    (if (or (nil? from-version)
+            (and to-version (<= from-version to-version)))
+      (filter #(and (or (nil? from-version)
+                        (< from-version (to-long (:version %))))
+                    (or (nil? to-version)
+                        (<= (to-long (:version %)) to-version)))
+              (sort-by :version migrations))
+      (reverse (find-applicable-migrations migrations to-version from-version)))))
 
 (defn find-migration-by-version
   "Returns the migration with the given version."
-  [version] (first (filter #(= (:version %) version) (vals @*migrations*))))
+  [version]
+  (if-let [version (to-date-time version)]
+    (first (filter #(= (:version %) version) (vals @*migrations*)))
+    (throw (Exception. (str "Invalid migration version. Must be a timestamp: " version)))))
 
 (defn select-current-version
   "Returns the current schema version, or nil if no migration has been
   run yet."
   [] (jdbc/with-query-results result-set
        [(str "SELECT MAX(version) AS version FROM " migration-table)]
-       (:version (first result-set))))
+       (to-date-time (:version (first result-set)))))
 
 (defn migration-table? []
   "Returns true if the migration-table exists, otherwise false."
@@ -107,7 +117,9 @@
   (delete-migration migration))
 
 (defn- direction [current-version target-version]
-  (if (or (nil? current-version) (str<= current-version target-version ))
+  (if (or (nil? current-version)
+          (<= (to-long current-version)
+              (to-long target-version)))
     :up :down))
 
 (defn run
@@ -118,7 +130,7 @@
   (if-not (migration-table?)
     (create-migration-table))
   (let [current-version (select-current-version)
-        target-version (or (and (= target-version 0) "") target-version (latest-version))]
+        target-version (or (and (= target-version 0) 0) target-version (latest-version))]
     (jdbc/transaction
      (doseq [migration (find-applicable-migrations (vals @*migrations*) current-version target-version)]
        (if (= (direction current-version target-version) :up)

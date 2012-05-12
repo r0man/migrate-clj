@@ -1,7 +1,8 @@
 (ns migrate.test.core
   (:import [java.sql DriverManager SQLException])
   (:require [clojure.java.jdbc :as sql])
-  (:use clojure.test
+  (:use [clj-time.coerce :only (to-date-time)]
+        clojure.test
         migrate.core
         migrate.test.examples))
 
@@ -28,18 +29,18 @@
         (finally (drop-migration-table))))
 
 (deftest test-latest-migration
-  (is (= (latest-migration) (find-migration-by-version "2010-11-03 20:11:01"))))
+  (is (= (latest-migration) (find-migration-by-version "2010-11-03T20:11:01"))))
 
 (deftest test-latest-version
-  (is (= (latest-version) "2010-11-03 20:11:01")))
+  (is (= (to-date-time "2010-11-03T20:11:01") (latest-version))))
 
 (deftest test-find-migration-by-versions
-  (is (nil? (find-migration-by-version "unknown version")))
+  (is (thrown? Exception (find-migration-by-version "invalid version")))
   (are [version]
-    (is (= (:version (find-migration-by-version version)) version))
-    "2010-11-01 21:30:10"
-    "2010-11-02 14:12:45"
-    "2010-11-03 20:11:01"))
+    (is (= (to-date-time version) (:version (find-migration-by-version version))))
+    "2010-11-01T21:30:10"
+    "2010-11-02T14:12:45"
+    "2010-11-03T20:11:01"))
 
 (deftest test-format-time
   (is (re-matches #"1970-01-01 0.:00:00" (format-time (java.util.Date. 0)))))
@@ -61,14 +62,14 @@
 
 (dbtest test-insert-migration
   (with-version-table
-    (doseq [version ["2010-11-01 21:30:10" "2010-11-02 14:12:45"]]
+    (doseq [version ["2010-11-01T21:30:10" "2010-11-02T14:12:45"]]
       (let [migration (find-migration-by-version version)]
         (insert-migration migration)
         (is (= (select-current-version) (:version migration)))))))
 
 (dbtest test-delete-migration
   (with-version-table
-    (let [migrations (map find-migration-by-version ["2010-11-01 21:30:10" "2010-11-02 14:12:45"])]
+    (let [migrations (map find-migration-by-version ["2010-11-01T21:30:10" "2010-11-02T14:12:45"])]
       (doall (map insert-migration migrations))
       (doseq [migration (reverse migrations)]
         (is (= (select-current-version) (:version migration)))
@@ -78,25 +79,26 @@
 
 (dbtest test-find-applicable-migrations
   (with-version-table
-    (let [versions (map (fn [v] {:version v}) ["2010-11-01 21:30:10" "2010-11-02 14:12:45" "2010-11-03 20:11:01"])]
+    (let [versions (map (fn [v] {:version v}) (map to-date-time ["2010-11-01T21:30:10" "2010-11-02T14:12:45" "2010-11-03T20:11:01"]))]
       (are [from to expected]
-        (is (= (map :version (find-applicable-migrations versions from to)) expected))
-        nil "2010-11-01 21:30:10"
-        ["2010-11-01 21:30:10"]
-        nil "2010-11-02 14:12:45"
-        ["2010-11-01 21:30:10" "2010-11-02 14:12:45"]
-        nil "2010-11-03 20:11:01"
-        ["2010-11-01 21:30:10" "2010-11-02 14:12:45" "2010-11-03 20:11:01"]
-        "2010-11-01 21:30:10" "2010-11-02 14:12:45"
-        ["2010-11-02 14:12:45"]
-        "2010-11-02 14:12:45" "2010-11-01 21:30:10"
-        ["2010-11-02 14:12:45"]
-        "2010-11-03 20:11:01" nil
-        ["2010-11-03 20:11:01" "2010-11-02 14:12:45" "2010-11-01 21:30:10"]
-        "2010-11-03 20:11:01" "2010-11-01 21:30:10"
-        ["2010-11-03 20:11:01" "2010-11-02 14:12:45"]
-        "2010-11-03 20:11:01" "2010-11-02 14:12:45"
-        ["2010-11-03 20:11:01"]))))
+        (is (= (map to-date-time expected)
+               (map :version (find-applicable-migrations versions from to))))
+        nil "2010-11-01T21:30:10"
+        ["2010-11-01T21:30:10"]
+        nil "2010-11-02T14:12:45"
+        ["2010-11-01T21:30:10" "2010-11-02T14:12:45"]
+        nil "2010-11-03T20:11:01"
+        ["2010-11-01T21:30:10" "2010-11-02T14:12:45" "2010-11-03T20:11:01"]
+        "2010-11-01T21:30:10" "2010-11-02T14:12:45"
+        ["2010-11-02T14:12:45"]
+        "2010-11-02T14:12:45" "2010-11-01T21:30:10"
+        ["2010-11-02T14:12:45"]
+        "2010-11-03T20:11:01" nil
+        ["2010-11-03T20:11:01" "2010-11-02T14:12:45" "2010-11-01T21:30:10"]
+        "2010-11-03T20:11:01" "2010-11-01T21:30:10"
+        ["2010-11-03T20:11:01" "2010-11-02T14:12:45"]
+        "2010-11-03T20:11:01" "2010-11-02T14:12:45"
+        ["2010-11-03T20:11:01"]))))
 
 (dbtest test-run-all-up
   (run)
@@ -123,7 +125,7 @@
   (is (thrown? SQLException (select-current-version)))
   (with-version-table
     (is (nil? (select-current-version)))
-    (insert-migration (find-migration-by-version "2010-11-01 21:30:10"))
-    (is (= (select-current-version) "2010-11-01 21:30:10"))
-    (insert-migration (find-migration-by-version "2010-11-02 14:12:45"))
-    (is (= (select-current-version) "2010-11-02 14:12:45"))))
+    (insert-migration (find-migration-by-version "2010-11-01T21:30:10"))
+    (is (= (to-date-time "2010-11-01T21:30:10") (select-current-version)))
+    (insert-migration (find-migration-by-version "2010-11-02T14:12:45"))
+    (is (= (to-date-time "2010-11-02T14:12:45") (select-current-version)))))
