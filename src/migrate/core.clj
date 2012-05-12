@@ -2,7 +2,8 @@
   (:import java.sql.SQLException)
   (:require [clojure.java.jdbc :as jdbc])
   (:use [clojure.tools.logging :only (info)]
-        [leiningen.env.core :only (environment)]))
+        [clojure.string :only (blank?)]
+        [environ.core :only (env)]))
 
 (def ^:dynamic *migrations* (atom {}))
 (def migration-table "schema_migrations")
@@ -129,5 +130,8 @@
   "Eval `body` within the context of the current environment's
   database connection."
   [& body]
-  `(jdbc/with-connection (:database (environment))
-     ~@body))
+  `(let [connection# (env :database-url)]
+     (if (blank? connection#)
+       (throw (Exception. "Please set the DATABASE_URL environment variable.")))
+     (jdbc/with-connection connection#
+       ~@body)))

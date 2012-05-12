@@ -1,7 +1,6 @@
 (ns migrate.tasks
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [leiningen.env.core :only (set-environments!)]
-        migrate.core))
+  (:use migrate.core))
 
 (defn load-migrations
   "Load the project's migration namespaces."
@@ -9,9 +8,8 @@
   (doseq [ns (:migrate project)]
     (require ns)))
 
-(defn print-migrations [project env]
+(defn print-migrations [project]
   (load-migrations project)
-  (set-environments! project)
   (with-connection
     (let [migrations (select-migrations)
           migrations (zipmap (map :version migrations) migrations)]
@@ -29,5 +27,4 @@
 
 (defn run-migrations [project & [version]]
   (load-migrations project)
-  (set-environments! project)
   (with-connection (run version)))

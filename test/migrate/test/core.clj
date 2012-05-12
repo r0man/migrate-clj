@@ -1,15 +1,9 @@
 (ns migrate.test.core
   (:import [java.sql DriverManager SQLException])
   (:require [clojure.java.jdbc :as sql])
-  (:use [migrate.core] :reload)
   (:use clojure.test
+        migrate.core
         migrate.examples))
-
-(def ^:dynamic *database*
-  {:classname "org.sqlite.JDBC",
-   :subprotocol "sqlite",
-   :subname "db/test.sqlite3"
-   :create true})
 
 (def ^:dynamic *database*
   {:classname "org.postgresql.Driver"
@@ -48,7 +42,7 @@
     "2010-11-03 20:11:01"))
 
 (deftest test-format-time
-  (is (= "1970-01-01 00:00:00" (format-time (java.util.Date. 0)))))
+  (is (re-matches #"1970-01-01 0.:00:00" (format-time (java.util.Date. 0)))))
 
 (dbtest test-create-migration-table
   (is (create-migration-table))

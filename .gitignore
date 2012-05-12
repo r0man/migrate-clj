@@ -7,3 +7,6 @@ native
 /db/test.sqlite3
 /logs/debug.log
 /.lein-deps-sum
+/.lein-env
+/target/stale/dependencies
+/.lein-failures
