@@ -10,3 +10,4 @@ native
 /.lein-env
 /target/stale/dependencies
 /.lein-failures
+/.lein-plugins/checksum
