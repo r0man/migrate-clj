@@ -5,8 +5,21 @@
         [clj-time.coerce :only (to-date-time to-timestamp to-long)]
         [clj-time.format :only (formatters unparse)]
         [clojure.tools.logging :only (info)]
-        [clojure.string :only (blank?)]
+        [clojure.tools.namespace  :only [find-namespaces-on-classpath]]
+        [clojure.string :only (blank? split)]
         [environ.core :only (env)]))
+
+(defn find-namespaces [ns]
+  (filter #(.startsWith (str %1 ".") ns) (find-namespaces-on-classpath)))
+
+(defn find-migrations [migration-ns]
+  (for [ns (sort (find-namespaces migration-ns))]
+    (do (require ns)
+        {:down (ns-resolve ns 'down)
+         :up (ns-resolve ns 'up)
+         :version (last (split (str ns) #"\."))})))
+
+(find-migrations "migrate.test.migrations")
 
 (def ^:dynamic *migrations* (atom {}))
 (def migration-table "schema_migrations")
