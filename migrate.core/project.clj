@@ -7,7 +7,7 @@
   :dependencies [[environ "0.2.1"]
                  [clj-time "0.4.3"]
                  [org.clojure/clojure "1.4.0"]
-                 [org.clojure/java.jdbc "0.2.1"]
+                 [org.clojure/java.jdbc "0.2.3"]
                  [org.clojure/tools.logging "0.2.3"]]
   :profiles {:dev {:resource-paths ["test-resources"]
                    :dependencies [[org.clojure/java.jdbc "0.2.1"]
