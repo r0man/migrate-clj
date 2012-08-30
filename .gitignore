@@ -11,3 +11,4 @@ native
 /target/stale/dependencies
 /.lein-failures
 /.lein-plugins/checksum
+/migrate.core/.lein-env
