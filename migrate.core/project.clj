@@ -1,4 +1,4 @@
-(defproject migrate/migrate.core "0.0.9-SNAPSHOT"
+(defproject migrate/migrate.core "0.1.0-SNAPSHOT"
   :description "Core migration library for use in applications"
   :url "http://github.com/r0man/migrate-clj"
   :min-lein-version "2.0.0"
