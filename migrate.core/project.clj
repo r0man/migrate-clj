@@ -6,11 +6,10 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[environ "0.3.0"]
                  [clj-time "0.4.3"]
-                 [org.clojure/clojure "1.4.0"]
                  [org.clojure/java.jdbc "0.2.3"]
                  [org.clojure/tools.logging "0.2.3"]]
   :profiles {:dev {:resource-paths ["test-resources"]
-                   :dependencies [[org.clojure/java.jdbc "0.2.1"]
+                   :dependencies [[org.clojure/java.jdbc "0.2.3"]
                                   [org.slf4j/slf4j-log4j12 "1.6.4"]
                                   [postgresql/postgresql "9.1-901.jdbc4"]]}}
   :eval-in :leiningen
