@@ -1,25 +1,26 @@
 (ns migrate.core
   (:import java.sql.SQLException)
-  (:require [clojure.java.jdbc :as jdbc])
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.java.classpath :refer [classpath]])
   (:use [clj-time.core :only (now)]
         [clj-time.coerce :only (to-date-time to-timestamp to-long)]
         [clj-time.format :only (formatters unparse)]
         [clojure.tools.logging :only (info)]
-        [clojure.tools.namespace  :only [find-namespaces-on-classpath]]
+        [clojure.tools.namespace.find :only [find-namespaces]]
         [clojure.string :only (blank? split)]
         [environ.core :only (env)]))
 
-(defn find-namespaces [ns]
-  (filter #(.startsWith (str %1 ".") ns) (find-namespaces-on-classpath)))
+(defn re-ns-matches
+  "Finds all namespaces on the classpath matching `re`."
+  [re] (filter #(re-matches re (str %1)) (find-namespaces (classpath))))
 
 (defn find-migrations [migration-ns]
   (for [ns (sort (find-namespaces migration-ns))]
     (do (require ns)
-        {:down (ns-resolve ns 'down)
+        {:ns ns
+         :down (ns-resolve ns 'down)
          :up (ns-resolve ns 'up)
          :version (last (split (str ns) #"\."))})))
-
-(find-migrations "migrate.test.migrations")
 
 (def ^:dynamic *migrations* (atom {}))
 (def migration-table "schema_migrations")
@@ -160,3 +161,24 @@
        (throw (Exception. "Please set the DATABASE_URL environment variable.")))
      (jdbc/with-connection connection#
        ~@body)))
+
+(defn- assert-direction
+  [ns direction]
+  (assert (ns-resolve ns direction)
+          (format "Namespace %s must have a #'%s fn." ns direction)))
+
+(defn- resolve-var [ns var]
+  (if-let [v (ns-resolve ns var)]
+    {:var v :doc (:doc (meta v))}))
+
+(defn make-migration
+  "Make a new migration from ns."
+  [ns]
+  (assert-direction ns 'up)
+  (assert-direction ns 'down)
+  {:ns ns
+   :up (resolve-var ns 'up)
+   :down (resolve-var ns 'up)
+   :version (last (split (str ns) #"\."))})
+
+;; (make-migration 'migrate.db.test.20120817142900-create-regions)

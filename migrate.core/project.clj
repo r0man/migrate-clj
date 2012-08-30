@@ -7,9 +7,10 @@
   :dependencies [[environ "0.2.1"]
                  [clj-time "0.4.3"]
                  [org.clojure/clojure "1.4.0"]
+                 [org.clojure/java.classpath "0.2.0"]
                  [org.clojure/java.jdbc "0.2.3"]
                  [org.clojure/tools.logging "0.2.3"]
-                 [org.clojure/tools.namespace "0.1.3"]]
+                 [org.clojure/tools.namespace "0.2.0-SNAPSHOT"]]
   :profiles {:dev {:resource-paths ["test-resources"]
                    :dependencies [[org.clojure/java.jdbc "0.2.1"]
                                   [org.slf4j/slf4j-log4j12 "1.6.4"]
@@ -18,4 +19,4 @@
   ;; :plugins [[environ/environ.lein "0.2.1"]]
   ;; :hooks [environ.leiningen.hooks]
   ;; :migrate [migrate.test.examples]
-  )
+  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"})

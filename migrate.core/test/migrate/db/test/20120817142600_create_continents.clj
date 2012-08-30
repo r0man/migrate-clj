@@ -1,4 +1,4 @@
-(ns migrate.test.migrations.20120817142600-create-continents
+(ns migrate.db.test.20120817142600-create-continents
   (:require [clojure.java.jdbc :as jdbc]))
 
 (defn up

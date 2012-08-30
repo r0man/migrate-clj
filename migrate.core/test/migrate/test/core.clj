@@ -3,6 +3,7 @@
   (:require [clojure.java.jdbc :as sql])
   (:use [clj-time.coerce :only (to-date-time)]
         clojure.test
+        environ.core
         migrate.core
         migrate.test.examples))
 
@@ -10,8 +11,8 @@
   {:classname "org.postgresql.Driver"
    :subprotocol "postgresql"
    :subname "//localhost/migrate_test"
-   :user "migrate"
-   :password "migrate"})
+   :user (env :user)
+   :password ""})
 
 (defn cleanup-db []
   (doseq [table ["regions" "countries" "continents" "schema_migrations"]]
