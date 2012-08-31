@@ -6,18 +6,17 @@
 
 (def test-db :migrate-db)
 
-;; (defn cleanup-db []
-;;   (doseq [table ["regions" "countries" "continents" "schema_migrations"]]
-;;     (try (jdbc/do-commands (str "DROP TABLE IF EXISTS " table))
-;;          (catch Exception _ nil))))
+(defmacro with-version-table [& body]
+  `(try (do (create-migration-table) ~@body)
+        (finally
+         (try (drop-migration-table)
+              (catch Exception e# nil)))))
 
 (defmacro dbtest [name & body]
   `(deftest ~name
      (with-connection test-db
        (jdbc/transaction
-        (try ~@body
-             (finally (jdbc/set-rollback-only)))))))
-
-(defmacro with-version-table [& body]
-  `(try (do (create-migration-table) ~@body)
-        (finally (drop-migration-table))))
+        (try
+          (with-version-table
+            ~@body)
+          (finally (jdbc/set-rollback-only)))))))
