@@ -10,7 +10,7 @@
          (parse-version 'migrate.db.test.20120817142900-create-continents-table))))
 
 (deftest test-re-ns-matches
-  (is (empty? (re-ns-matches #"UNKNWON-NAMESPACE")))
+  (is (empty? (re-ns-matches #"UNKNOWN-NAMESPACE")))
   (is (= '[migrate.test.util] (re-ns-matches #"migrate.test.util"))))
 
 (deftest test-parse-db-spec

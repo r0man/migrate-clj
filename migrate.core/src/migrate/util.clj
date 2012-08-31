@@ -10,20 +10,23 @@
 (def ^:dynamic *version-regex*
   #".*(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2}).*")
 
+(defn format-subname
+  "Format the database spec subname from `url`."
+  [url]
+  (let [{:keys [server-name server-port query-string]} url]
+    (str "//" server-name (if server-port (str ":" server-port))
+         (:uri url) (if query-string (str "?" query-string))))  )
+
 (defn parse-db-spec
   "Parse `s` as a database spec return a clojure/java.jdbc and Korma compatible map."
   [s]
-  (if-let [{:keys [server-name server-port query-string] :as url}
-           (parse-url s)]
+  (if-let [url (parse-url s)]
     {:subprotocol (:scheme url)
      :user (:user url)
      :password (:password url)
-     :subname (str "//" server-name
-                   (if server-port
-                     (str ":" server-port))
-                   (:uri url) (if query-string (str "?" query-string)))
-     :host server-name
-     :port server-port
+     :subname (format-subname url)
+     :host (:server-name url)
+     :port (:server-port url)
      :db (replace (:uri url) #"^/" "")}))
 
 (defn parse-version
