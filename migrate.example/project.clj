@@ -1,4 +1,4 @@
-(defproject migrate/example "0.1.0-SNAPSHOT"
+(defproject migrate/migrate.example "0.1.0-SNAPSHOT"
   :description "Migrate Example project"
   :url "https://github.com/r0man/migrate-clj"
   :license {:name "Eclipse Public License"

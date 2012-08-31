@@ -1,5 +1,6 @@
 (ns migrate.connection
-  (:require [clojure.java.jdbc :as jdbc]))
+  (:require [clojure.java.jdbc :as jdbc]
+            [migrate.util :refer [resolve-db-spec]]))
 
 (defn identifier-quote-string
   "Returns the string to quote identifiers from the `connection` meta data."
