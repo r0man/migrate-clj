@@ -9,11 +9,12 @@
         migrate.core
         migrate.test))
 
-;; (deftest test-latest-migration
-;;   (is (= (latest-migration) (find-migration-by-version "2010-11-03T20:11:01"))))
+(deftest test-latest-migration
+  (let [ns 'migrate.example]
+    (is (= (latest-migration ns) (last (find-migrations ns))))))
 
-;; (deftest test-latest-version
-;;   (is (= (to-date-time "2010-11-03T20:11:01") (latest-version))))
+(deftest test-latest-version
+  (is (= (date-time 2012 8 17 14 29) (latest-version 'migrate.example))))
 
 ;; (deftest test-find-migration-by-versions
 ;;   (is (thrown? Exception (find-migration-by-version "invalid version")))

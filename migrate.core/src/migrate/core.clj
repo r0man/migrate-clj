@@ -71,13 +71,13 @@
    (jdbc/as-identifier *migration-table*)
    ["version=?" (to-timestamp (:version migration))]))
 
-;; (defn latest-migration
-;;   "Returns the latest (the most recent) migration."
-;;   [] (last (sort-by :version (vals @*migrations*))))
+(defn latest-migration
+  "Returns the latest (the most recent) migration."
+  [ns] (last (sort-by :version (find-migrations ns))))
 
-;; (defn latest-version
-;;   "Returns the version of the latest (the most recent) migration."
-;;   [] (:version (latest-migration)))
+(defn latest-version
+  "Returns the version of the latest (the most recent) migration."
+  [ns] (:version (latest-migration ns)))
 
 (defn select-current-version
   "Returns the current schema version, or nil if no migration has been
