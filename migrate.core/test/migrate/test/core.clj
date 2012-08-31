@@ -28,7 +28,7 @@
       'migrate.example.20120817142900-create-regions)))
 
 (deftest test-format-time
-  (is (re-matches #"1970-01-01T0.:00:00Z" (format-time (java.util.Date. 0)))))
+  (is (re-matches #"Thu, 01 Jan 1970 00:00:00 \+...." (format-time (java.util.Date. 0)))))
 
 (deftest test-find-migrations
   (let [migrations (find-migrations 'migrate.example)]
@@ -118,26 +118,32 @@
       (is (run-down (nth migrations 0)))
       (is (nil? (select-current-version))))))
 
-;; (dbtest test-run-all-up
-;;   (run)
-;;   (is (= (select-current-version) (:version (latest-migration)))))
+(dbtest test-run-all-up
+  (with-version-table
+    (run 'migrate.example)
+    (is (= (select-current-version) (:version (latest-migration 'migrate.example))))))
 
-;; (dbtest test-run-up-to
-;;   (doseq [version (sort (map :version (vals @*migrations*)))]
-;;     (run version)
-;;     (is (= (select-current-version) version))))
+(dbtest test-run-up-to
+  (with-version-table
+    (doseq [migration (find-migrations 'migrate.example)]
+      (run 'migrate.example (:version migration))
+      (is (= (:version migration) (select-current-version))))))
 
-;; (dbtest test-run-down-to
-;;   (run)
-;;   (doseq [version (reverse (sort (map :version (vals @*migrations*))))]
-;;     (run version)
-;;     (is (= (select-current-version) version))))
+(dbtest test-run-down-to
+  (with-version-table
+    (let [ns 'migrate.example]
+      (run ns)
+      (doseq [migration (reverse (find-migrations ns))]
+        (run ns (:version migration))
+        (is (= (:version migration) (select-current-version)))))))
 
-;; (dbtest test-run-all-down
-;;   (run)
-;;   (is (= (select-current-version) (:version (latest-migration))))
-;;   (run 0)
-;;   (is (nil? (select-current-version))))
+(dbtest test-run-all-down
+  (with-version-table
+    (let [ns 'migrate.example]
+      (run ns)
+      (is (= (:version (latest-migration ns)) (select-current-version)))
+      (run ns 0)
+      (is (nil? (select-current-version))))))
 
 (dbtest test-select-current-version
   (with-version-table

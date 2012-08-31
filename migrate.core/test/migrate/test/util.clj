@@ -37,6 +37,6 @@
     nil nil
     "" ""
     "x" "x"
-    :migrate-db "postgresql://localhost/migrate_development"
-    ":migrate-db" "postgresql://localhost/migrate_development"
-    "postgresql://localhost/migrate_development" "postgresql://localhost/migrate_development"))
+    :migrate-db "postgresql://localhost/migrate_test"
+    ":migrate-db" "postgresql://localhost/migrate_test"
+    "postgresql://localhost/migrate_test" "postgresql://localhost/migrate_test"))

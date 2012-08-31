@@ -1,13 +1,13 @@
 (ns migrate.core
   (:import java.sql.SQLException)
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require [clj-time.format :refer [formatters unparse]]
+            [clojure.java.jdbc :as jdbc]
             [clojure.java.classpath :refer [classpath]]
             [migrate.util :refer [parse-version re-ns-matches]])
   (:use [clj-time.core :only (date-time now)]
         [clj-time.coerce :only (to-date-time to-timestamp to-long)]
-        [clj-time.format :only (formatters unparse show-formatters)]
         [clojure.tools.logging :only (info)]
-        [clojure.string :only (blank? split)]
+        [clojure.string :only (blank? split join)]
         [environ.core :only (env)]))
 
 (def ^:dynamic *migrations* (atom {}))
@@ -35,7 +35,7 @@
             (sort-by :version)))
 
 (defn format-time [date]
-  (if date (unparse (formatters :date-time-no-ms) (to-date-time date))))
+  (if date (unparse (formatters :rfc822) (to-date-time date))))
 
 (defn create-migration-table
   "Create the database table that holds the migration metadata."
@@ -117,7 +117,7 @@
   "Run the migration by invoking the fn stored under the :up key and
   insert the metadata into the migration table."
   [migration]
-  (info (str "Migrating up: " (:version migration)))
+  (info (str "+ " (format-time (:version migration)) " " (:doc (meta (:up migration)))))
   ((:up migration))
   (insert-migration migration))
 
@@ -125,28 +125,37 @@
   "Run the migration by invoking the fn stored under the :down key and
   delete the metadata into the migration table."
   [migration]
-  (info (str "Migrating down: " (:version migration)))
+  (info (str "- " (format-time (:version migration)) " " (:doc (meta (:down migration)))))
   ((:down migration))
   (delete-migration migration))
 
-;; (defn- direction [current-version target-version]
-;;   (if (or (nil? current-version)
-;;           (<= (to-long current-version)
-;;               (to-long target-version)))
-;;     :up :down))
+(defn- direction [current-version target-version]
+  (if (or (nil? current-version)
+          (<= (to-long current-version)
+              (to-long target-version)))
+    :up :down))
 
-;; (defn run
-;;   "Run all database migrations to get from the current to the target
-;;   version. Providing 0 as the target version runs all migrations down
-;;   starting with the current."
-;;   [& [target-version]]
-;;   (if-not (migration-table?)
-;;     (create-migration-table))
-;;   (let [current-version (select-current-version)
-;;         target-version (or (and (= target-version 0) 0) target-version (latest-version))]
-;;     (jdbc/transaction
-;;      (doseq [migration (find-applicable-migrations (vals @*migrations*) current-version target-version)]
-;;        (if (= (direction current-version target-version) :up)
-;;          (run-up migration)
-;;          (run-down migration))
-;;        (info (str "   Description: " (:description migration)))))))
+(defn target-version
+  "Returns the target version of the migrations in `ns`."
+  [ns version]
+  (cond
+   (= 0 version) 0
+   (to-date-time version)
+   (to-date-time version)
+   :else (latest-version ns)))
+
+(defn run
+  "Run all database migrations to get from the current to the target
+  version. Providing 0 as the target version runs all migrations down
+  starting with the current."
+  [ns & [version]]
+  (if-not (migration-table?)
+    (create-migration-table))
+  (let [current-version (select-current-version)
+        target-version (target-version ns version)]
+    (jdbc/transaction
+     (info (format "Running migrations in %s from %s to %s." ns current-version target-version))
+     (doseq [migration (find-applicable-migrations (find-migrations ns) current-version target-version)]
+       (if (= (direction current-version target-version) :up)
+         (run-up migration)
+         (run-down migration))))))
