@@ -92,12 +92,6 @@
       [(format "SELECT * FROM %s" (jdbc/as-identifier *migration-table*))]
       (into [] (map #(assoc %1 :version (to-date-time (:version %1))) result-set)))))
 
-;; (defmacro defmigration [version description up-form down-form]
-;;   `(if-let [version# (to-date-time ~version)]
-;;      (let [migration# {:version version# :description ~description :up #(~@up-form) :down #(~@down-form)}]
-;;        (swap! *migrations* assoc (:version migration#) migration#))
-;;      (throw (Exception. (str "Invalid migration version. Must be a timestamp: " ~version)))))
-
 ;; (defn find-applicable-migrations
 ;;   "Returns all migrations that have to be run to migrate from
 ;;   from-version to to-version."
