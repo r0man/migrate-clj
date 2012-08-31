@@ -8,3 +8,13 @@
   (is (nil? (parse-version "")))
   (is (= (date-time 2012 8 17 14 29)
          (parse-version 'migrate.db.test.20120817142900-create-continents-table))))
+
+(deftest test-re-ns-matches
+  (is (empty? (re-ns-matches #"UNKNWON-NAMESPACE")))
+  (is (= '[migrate.test.util] (re-ns-matches #"migrate.test.util"))))
+
+(deftest test-resolve-var
+  (is (thrown? AssertionError (resolve-var 'migrate.test.util 'unknown-var)))
+  (let [v (resolve-var 'migrate.util 'resolve-var)]
+    (is (= #'resolve-var (:var v)))
+    (is (= (:doc (meta #'resolve-var)) (:doc v)))))
