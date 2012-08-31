@@ -1,14 +1,12 @@
 (ns migrate.core
-  (:import java.sql.SQLException)
-  (:require [clj-time.format :refer [formatters unparse]]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.java.classpath :refer [classpath]]
-            [migrate.util :refer [parse-version re-ns-matches]])
-  (:use [clj-time.core :only (date-time now)]
-        [clj-time.coerce :only (to-date-time to-timestamp to-long)]
-        [clojure.tools.logging :only (info)]
-        [clojure.string :only (blank? split join)]
-        [environ.core :only (env)]))
+   (:import java.sql.SQLException)
+   (:require [clj-time.core :refer [now]]
+             [clj-time.format :refer [formatters unparse]]
+             [clj-time.coerce :refer [to-date-time to-timestamp to-long]]
+             [clojure.java.jdbc :as jdbc]
+             [clojure.java.classpath :refer [classpath]]
+             [clojure.tools.logging :refer [info]]
+             [migrate.util :refer [parse-version re-ns-matches]]))
 
 (def ^:dynamic *migrations* (atom {}))
 
@@ -17,6 +15,15 @@
 (def ^:dynamic *migrations-ns* (create-ns 'migrate.db))
 
 (defrecord Migration [ns version up down])
+
+(defn direction
+  "Returns the direction keyword to get from `current-version` to
+  `target-version`."
+  [current-version target-version]
+  (if (or (nil? current-version)
+          (<= (to-long current-version)
+              (to-long target-version)))
+    :up :down))
 
 (defn require-migration
   "Make a new migration from ns."
@@ -33,6 +40,23 @@
   [ns] (->> (re-ns-matches (re-pattern (str ns "\\..*")))
             (map require-migration)
             (sort-by :version)))
+
+(defn latest-migration
+  "Returns the latest (the most recent) migration."
+  [ns] (last (sort-by :version (find-migrations ns))))
+
+(defn latest-version
+  "Returns the version of the latest (the most recent) migration."
+  [ns] (:version (latest-migration ns)))
+
+(defn target-version
+  "Returns the target version of the migrations in `ns`."
+  [ns version]
+  (cond
+   (= 0 version) 0
+   (to-date-time version)
+   (to-date-time version)
+   :else (latest-version ns)))
 
 (defn format-time [date]
   (if date (unparse (formatters :rfc822) (to-date-time date))))
@@ -64,14 +88,6 @@
   (jdbc/delete-rows
    (jdbc/as-identifier *migration-table*)
    ["version=?" (to-timestamp (:version migration))]))
-
-(defn latest-migration
-  "Returns the latest (the most recent) migration."
-  [ns] (last (sort-by :version (find-migrations ns))))
-
-(defn latest-version
-  "Returns the version of the latest (the most recent) migration."
-  [ns] (:version (latest-migration ns)))
 
 (defn select-current-version
   "Returns the current schema version, or nil if no migration has been
@@ -128,21 +144,6 @@
   (info (str "- " (format-time (:version migration)) " " (:doc (meta (:down migration)))))
   ((:down migration))
   (delete-migration migration))
-
-(defn- direction [current-version target-version]
-  (if (or (nil? current-version)
-          (<= (to-long current-version)
-              (to-long target-version)))
-    :up :down))
-
-(defn target-version
-  "Returns the target version of the migrations in `ns`."
-  [ns version]
-  (cond
-   (= 0 version) 0
-   (to-date-time version)
-   (to-date-time version)
-   :else (latest-version ns)))
 
 (defn run
   "Run all database migrations to get from the current to the target
