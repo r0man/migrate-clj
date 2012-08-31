@@ -13,3 +13,6 @@ native
 /.lein-plugins/checksum
 /migrate.core/.lein-env
 /migrate.sample/.lein-env
+/migrate.example/.lein-env
+/migrate.example/checkouts/migrate.core
+/migrate.example/checkouts/migrate.lein
