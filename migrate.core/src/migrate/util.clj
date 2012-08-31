@@ -4,11 +4,14 @@
             [clojure.tools.namespace.find :refer [find-namespaces]]
             [inflections.number :refer [parse-integer]]))
 
+(def ^:dynamic *version-regex*
+  #".*(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2}).*")
+
 (defn parse-version
   "Parse the version timestamp from the namespace `ns`."
   [ns]
   (let [[year month day hour minute second]
-        (map parse-integer (rest (re-matches #".*(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2}).*"(str ns))))]
+        (map parse-integer (rest (re-matches *version-regex* (str ns))))]
     (if (and year month day hour minute second)
       (date-time year month day hour minute second))))
 
