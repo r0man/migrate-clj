@@ -13,6 +13,21 @@
   (is (empty? (re-ns-matches #"UNKNWON-NAMESPACE")))
   (is (= '[migrate.test.util] (re-ns-matches #"migrate.test.util"))))
 
+(deftest test-parse-url
+  (let [spec (parse-url "postgresql://localhost/migrate_test")]
+    (is (= "postgresql" (:scheme spec)))
+    (is (= "localhost" (:server-name spec)))
+    (is (= "/migrate_test" (:uri spec))))
+  (let [spec (parse-url "postgresql://tiger:scotch@localhost:5432/migrate_test?a=1&b=2")]
+    (is (= "postgresql" (:scheme spec)))
+    (is (= "tiger" (:user spec)))
+    (is (= "scotch" (:password spec)))
+    (is (= "localhost" (:server-name spec)))
+    (is (= 5432 (:server-port spec)))
+    (is (= "/migrate_test" (:uri spec)))
+    (is (= "a=1&b=2" (:query-string spec)))
+    (is (= {:a "1", :b "2"} (:params spec)))))
+
 (deftest test-resolve-db-spec
   (are [db-spec expected]
     (is (=  expected (resolve-db-spec db-spec)))

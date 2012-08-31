@@ -1,12 +1,29 @@
 (ns migrate.util
   (:require [environ.core :refer [env]]
             [clj-time.core :refer [date-time]]
+            [clojure.string :refer [split]]
             [clojure.java.classpath :refer [classpath]]
             [clojure.tools.namespace.find :refer [find-namespaces]]
             [inflections.number :refer [parse-integer]]))
 
 (def ^:dynamic *version-regex*
   #".*(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2}).*")
+
+(defn parse-url
+  "Parse `s` as an URI and return a Ring compatible map."
+  [s]
+  (if-let [matches (re-matches #"([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/[^?]*)(\?(.*))?))" s)]
+    {:scheme (nth matches 1)
+     :user (nth matches 3)
+     :password (nth matches 4)
+     :server-name (nth matches 6)
+     :server-port (parse-integer (nth matches 8))
+     :uri (nth matches 10)
+     :query-string (nth matches 12)
+     :params (->> (split (or (nth matches 12) "") #"&")
+                  (map #(split %1 #"="))
+                  (mapcat #(vector (keyword (first %1)) (second %1)))
+                  (apply hash-map))}))
 
 (defn parse-version
   "Parse the version timestamp from the namespace `ns`."
@@ -26,8 +43,7 @@
   (cond
    (keyword? db-spec)
    (env db-spec)
-   (and (string? db-spec)
-        (= \: (first db-spec)))
+   (and (string? db-spec) (= \: (first db-spec)))
    (env (keyword (apply str (rest db-spec))))
    :else db-spec))
 
