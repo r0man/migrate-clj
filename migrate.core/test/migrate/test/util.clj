@@ -13,6 +13,16 @@
   (is (empty? (re-ns-matches #"UNKNWON-NAMESPACE")))
   (is (= '[migrate.test.util] (re-ns-matches #"migrate.test.util"))))
 
+(deftest test-resolve-db-spec
+  (are [db-spec expected]
+    (is (=  expected (resolve-db-spec db-spec)))
+    nil nil
+    "" ""
+    "x" "x"
+    :migrate-db "postgresql://localhost/migrate_development"
+    ":migrate-db" "postgresql://localhost/migrate_development"
+    "postgresql://localhost/migrate_development" "postgresql://localhost/migrate_development"))
+
 (deftest test-resolve-var
   (is (thrown? AssertionError (resolve-var 'migrate.test.util 'unknown-var)))
   (let [v (resolve-var 'migrate.util 'resolve-var)]

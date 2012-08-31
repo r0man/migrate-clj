@@ -9,16 +9,6 @@
   (with-connection db-spec
     (identifier-quote-string (jdbc/connection))))
 
-(deftest test-resolve-db-spec
-  (are [db-spec expected]
-    (is (=  expected (resolve-db-spec db-spec)))
-    nil nil
-    "" ""
-    "x" "x"
-    :migrate-db "postgresql://localhost/migrate_development"
-    ":migrate-db" "postgresql://localhost/migrate_development"
-    "postgresql://localhost/migrate_development" "postgresql://localhost/migrate_development"))
-
 (deftest test-with-connection
   (with-connection db-spec
     (is (jdbc/connection))

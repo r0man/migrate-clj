@@ -1,5 +1,6 @@
 (ns migrate.util
-  (:require [clj-time.core :refer [date-time]]
+  (:require [environ.core :refer [env]]
+            [clj-time.core :refer [date-time]]
             [clojure.java.classpath :refer [classpath]]
             [clojure.tools.namespace.find :refer [find-namespaces]]
             [inflections.number :refer [parse-integer]]))
@@ -18,6 +19,17 @@
 (defn re-ns-matches
   "Finds all namespaces on the classpath matching `re`."
   [re] (filter #(re-matches re (str %1)) (find-namespaces (classpath))))
+
+(defn resolve-db-spec
+  "Reolve `db-spec` via environ or return `db-spec`."
+  [db-spec]
+  (cond
+   (keyword? db-spec)
+   (env db-spec)
+   (and (string? db-spec)
+        (= \: (first db-spec)))
+   (env (keyword (apply str (rest db-spec))))
+   :else db-spec))
 
 (defn resolve-var
   "Resolve `var` in `ns` and return a map with :var and :doc keys. If
