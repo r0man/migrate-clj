@@ -14,7 +14,7 @@
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/tools.namespace "0.2.0-SNAPSHOT"]]
   :profiles {:dev {:env {:migrate-db "postgresql://localhost/migrate_development"}
-                   :dependencies [[migrate/example "0.1.0-SNAPSHOT"]
+                   :dependencies [[migrate/migrate.example "0.1.0-SNAPSHOT"]
                                   [org.slf4j/slf4j-log4j12 "1.6.4"]
                                   [postgresql/postgresql "9.1-901.jdbc4"]]
                    :resource-paths ["test-resources"]}

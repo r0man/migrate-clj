@@ -1,7 +1,8 @@
 (ns migrate.core
   (:import java.sql.SQLException)
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.java.classpath :refer [classpath]])
+            [clojure.java.classpath :refer [classpath]]
+            [migrate.util :refer [parse-version re-ns-matches]])
   (:use [clj-time.core :only (date-time now)]
         [clj-time.coerce :only (to-date-time to-timestamp to-long)]
         [clj-time.format :only (formatters unparse show-formatters)]
@@ -22,6 +23,22 @@
 
 (defn str<= [s1 s2]
   (<= (.compareTo s1 s2) 0))
+
+(defn require-migration
+  "Make a new migration from ns."
+  [ns]
+  (require ns)
+  (map->Migration
+   {:ns ns
+    :version (parse-version ns)
+    :up (ns-resolve ns 'up)
+    :down (ns-resolve ns 'down)}))
+
+(defn find-migrations
+  "Find all migrations under namespace `ns`."
+  [ns] (->> (re-ns-matches (re-pattern (str ns "\\..*")))
+            (map require-migration)
+            (sort-by :version)))
 
 (defn format-time [date]
   (if date (unparse (formatters :date-time-no-ms) (to-date-time date))))
@@ -144,13 +161,8 @@
          (run-down migration))
        (info (str "   Description: " (:description migration)))))))
 
-;; (defn make-migration
-;;   "Make a new migration from ns."
-;;   [ns]
-;;   (Migration.
-;;    ns
-;;    (parse-version ns)
-;;    (resolve-var ns 'up)
-;;    (resolve-var ns 'up)))
-
 ;; (make-migration 'migrate.db.test.20120817142900-create-regions)
+
+;; (ns 'migrate.example.20120817142900-create-regions)
+
+;; (re-ns-matches #"migrate.example.*")

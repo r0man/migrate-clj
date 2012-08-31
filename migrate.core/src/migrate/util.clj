@@ -50,11 +50,3 @@
    (and (string? db-spec) (= \: (first db-spec)))
    (env (keyword (apply str (rest db-spec))))
    :else db-spec))
-
-(defn resolve-var
-  "Resolve `var` in `ns` and return a map with :var and :doc keys. If
-  `var` can't be found thrown an AssertionError."
-  [ns var]
-  (if-let [v (ns-resolve ns var)]
-    {:var v :doc (:doc (meta v))}
-    (throw (AssertionError. (format "Can't resolve var #'%s in ns %s." var ns)))))

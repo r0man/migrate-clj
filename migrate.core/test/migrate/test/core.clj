@@ -1,6 +1,7 @@
 (ns migrate.test.core
   (:import [java.sql DriverManager SQLException])
-  (:require [clojure.java.jdbc :as sql])
+  (:require [clojure.java.jdbc :as sql]
+            [clj-time.core :refer [date-time]])
   (:use [clj-time.coerce :only (to-date-time)]
         clojure.test
         environ.core
@@ -45,6 +46,13 @@
 
 (deftest test-format-time
   (is (re-matches #"1970-01-01T0.:00:00Z" (format-time (java.util.Date. 0)))))
+
+(deftest test-find-migrations
+  (let [migrations (find-migrations 'migrate.example)]
+    (is (= 3 (count migrations)))
+    (is (every? (partial instance? migrate.core.Migration) migrations))
+    (is (= 'migrate.example.20120817142600-create-continents (:ns (first migrations))))
+    (is (= 'migrate.example.20120817142900-create-regions (:ns (last migrations))))))
 
 (dbtest test-create-migration-table
   (is (create-migration-table))
@@ -100,6 +108,13 @@
         ["2010-11-03T20:11:01" "2010-11-02T14:12:45"]
         "2010-11-03T20:11:01" "2010-11-02T14:12:45"
         ["2010-11-03T20:11:01"]))))
+
+(deftest test-require-migration
+  (let [migration (require-migration 'migrate.example.20120817142600-create-continents)]
+    (is (= 'migrate.example.20120817142600-create-continents (:ns migration)))
+    (is (= #'migrate.example.20120817142600-create-continents/up (:up migration)))
+    (is (= #'migrate.example.20120817142600-create-continents/down (:down migration)))
+    (is (= (date-time 2012 8 17 14 26) (:version migration)))))
 
 (dbtest test-run-all-up
   (run)

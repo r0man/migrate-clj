@@ -40,9 +40,3 @@
     :migrate-db "postgresql://localhost/migrate_development"
     ":migrate-db" "postgresql://localhost/migrate_development"
     "postgresql://localhost/migrate_development" "postgresql://localhost/migrate_development"))
-
-(deftest test-resolve-var
-  (is (thrown? AssertionError (resolve-var 'migrate.test.util 'unknown-var)))
-  (let [v (resolve-var 'migrate.util 'resolve-var)]
-    (is (= #'resolve-var (:var v)))
-    (is (= (:doc (meta #'resolve-var)) (:doc v)))))
