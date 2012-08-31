@@ -18,12 +18,6 @@
 
 (defrecord Migration [ns version up down])
 
-;; (defn str< [s1 s2]
-;;   (< (.compareTo s1 s2) 0))
-
-;; (defn str<= [s1 s2]
-;;   (<= (.compareTo s1 s2) 0))
-
 (defn require-migration
   "Make a new migration from ns."
   [ns]
