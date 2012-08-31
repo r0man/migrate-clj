@@ -119,12 +119,11 @@
 ;;               (sort-by :version migrations))
 ;;       (reverse (find-applicable-migrations migrations to-version from-version)))))
 
-;; (defn find-migration-by-version
-;;   "Returns the migration with the given version."
-;;   [version]
-;;   (if-let [version (to-date-time version)]
-;;     (first (filter #(= (:version %) version) (vals @*migrations*)))
-;;     (throw (Exception. (str "Invalid migration version. Must be a timestamp: " version)))))
+(defn find-migration-by-version
+  "Returns the migration with the given version."
+  [ns version]
+  (if-let [version (to-date-time version)]
+    (first (filter #(= (:version %) version) (find-migrations ns)))))
 
 (defn run-up
   "Run the migration by invoking the fn stored under the :up key and

@@ -16,13 +16,16 @@
 (deftest test-latest-version
   (is (= (date-time 2012 8 17 14 29) (latest-version 'migrate.example))))
 
-;; (deftest test-find-migration-by-versions
-;;   (is (thrown? Exception (find-migration-by-version "invalid version")))
-;;   (are [version]
-;;     (is (= (to-date-time version) (:version (find-migration-by-version version))))
-;;     "2010-11-01T21:30:10"
-;;     "2010-11-02T14:12:45"
-;;     "2010-11-03T20:11:01"))
+(deftest test-find-migration-by-version
+  (let [ns 'migrate.example]
+    (are [version expected]
+      (is (= (require-migration expected) (find-migration-by-version ns version)))
+      (date-time 2012 8 17 14 26)
+      'migrate.example.20120817142600-create-continents
+      (date-time 2012 8 17 14 28)
+      'migrate.example.20120817142800-create-countries
+      (date-time 2012 8 17 14 29)
+      'migrate.example.20120817142900-create-regions)))
 
 (deftest test-format-time
   (is (re-matches #"1970-01-01T0.:00:00Z" (format-time (java.util.Date. 0)))))
