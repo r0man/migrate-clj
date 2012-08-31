@@ -114,7 +114,8 @@
 
 (dbtest test-run-all-up
   (run 'migrate.example)
-  (is (= (select-current-version) (:version (latest-migration 'migrate.example)))))
+  (is (= (:version (latest-migration 'migrate.example))
+         (select-current-version))))
 
 (dbtest test-run-up-to
   (doseq [migration (find-migrations 'migrate.example)]
@@ -131,9 +132,16 @@
 (dbtest test-run-all-down
   (let [ns 'migrate.example]
     (run ns)
-    (is (= (:version (latest-migration ns)) (select-current-version)))
+    (is (= (:version (latest-migration 'migrate.example))
+           (select-current-version)))
     (run ns 0)
     (is (nil? (select-current-version)))))
+
+(dbtest test-select-version
+  (let [migration (first (find-migrations 'migrate.example))]
+    (insert-migration migration)
+    (let [found (select-version (:version migration))]
+      (is (= (:version migration) (:version found) )))))
 
 (dbtest test-select-current-version
   (is (nil? (select-current-version)))
@@ -155,3 +163,10 @@
          (map :version (select-migrations))))
   (drop-migration-table)
   (is (nil? (select-migrations))))
+
+(dbtest test-print-migrations
+  (print-migrations 'migrate.example)
+  (run 'migrate.example)
+  (is (= (:version (latest-migration 'migrate.example))
+         (select-current-version)))
+  (print-migrations 'migrate.example))

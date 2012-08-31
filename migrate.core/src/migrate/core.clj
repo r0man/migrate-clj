@@ -1,18 +1,14 @@
 (ns migrate.core
-   (:import java.sql.SQLException)
-   (:require [clj-time.core :refer [now]]
-             [clj-time.format :refer [formatters unparse]]
-             [clj-time.coerce :refer [to-date-time to-timestamp to-long]]
-             [clojure.java.jdbc :as jdbc]
-             [clojure.java.classpath :refer [classpath]]
-             [clojure.tools.logging :refer [info]]
-             [migrate.util :refer [parse-version re-ns-matches]]))
-
-(def ^:dynamic *migrations* (atom {}))
+  (:import java.sql.SQLException)
+  (:require [clj-time.core :refer [now]]
+            [clj-time.format :refer [formatters unparse]]
+            [clj-time.coerce :refer [to-date-time to-timestamp to-long]]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.java.classpath :refer [classpath]]
+            [clojure.tools.logging :refer [info]]
+            [migrate.util :refer [parse-version re-ns-matches]]))
 
 (def ^:dynamic *migration-table* :schema-migrations)
-
-(def ^:dynamic *migrations-ns* (create-ns 'migrate.db))
 
 (defrecord Migration [ns version up down])
 
@@ -89,6 +85,17 @@
    (jdbc/as-identifier *migration-table*)
    ["version=?" (to-timestamp (:version migration))]))
 
+(defn select-version
+  "Returns the current schema version, or nil if no migration has been
+  run yet."
+  [version]
+  (jdbc/with-query-results result-set
+    [(format "SELECT * FROM %s WHERE version = ?" (jdbc/as-identifier *migration-table*))
+     (to-timestamp version)]
+    (if-let [migration (first result-set)]
+      (-> (update-in migration [:created-at] to-date-time)
+          (update-in [:version] to-date-time)))))
+
 (defn select-current-version
   "Returns the current schema version, or nil if no migration has been
   run yet."
@@ -128,6 +135,20 @@
   [ns version]
   (if-let [version (to-date-time version)]
     (first (filter #(= (:version %) version) (find-migrations ns)))))
+
+(defn print-migrations [ns]
+  (let [pattern "%-32s %-8s %-32s %s"]
+    (println (format pattern "VERSION" "STATUS" "WHEN" "DESCRIPTION"))
+    (println (apply str (repeat 120 "-")))
+    (doseq [migration (find-migrations ns)
+            :let [found (select-version (:version migration))]]
+      (-> (format
+           pattern
+           (format-time (:version migration))
+           (if found "DONE" "PENDING")
+           (or (format-time (:created-at found)) "-")
+           (:doc (meta (:up migration))))
+          (println)))))
 
 (defn run-up
   "Run the migration by invoking the fn stored under the :up key and
