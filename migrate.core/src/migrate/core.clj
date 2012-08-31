@@ -2,27 +2,19 @@
   (:import java.sql.SQLException)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.classpath :refer [classpath]])
-  (:use [clj-time.core :only (now)]
+  (:use [clj-time.core :only (date-time now)]
         [clj-time.coerce :only (to-date-time to-timestamp to-long)]
-        [clj-time.format :only (formatters unparse)]
+        [clj-time.format :only (formatters unparse show-formatters)]
         [clojure.tools.logging :only (info)]
-        [clojure.tools.namespace.find :only [find-namespaces]]
         [clojure.string :only (blank? split)]
         [environ.core :only (env)]))
 
-(defn re-ns-matches
-  "Finds all namespaces on the classpath matching `re`."
-  [re] (filter #(re-matches re (str %1)) (find-namespaces (classpath))))
+(def ^:dynamic *migrations-ns* (create-ns 'migrate.db))
 
-(defn find-migrations [migration-ns]
-  (for [ns (sort (find-namespaces migration-ns))]
-    (do (require ns)
-        {:ns ns
-         :down (ns-resolve ns 'down)
-         :up (ns-resolve ns 'up)
-         :version (last (split (str ns) #"\."))})))
+(defrecord Migration [ns version up down])
 
 (def ^:dynamic *migrations* (atom {}))
+
 (def migration-table "schema_migrations")
 
 (defn str< [s1 s2]
@@ -152,33 +144,13 @@
          (run-down migration))
        (info (str "   Description: " (:description migration)))))))
 
-(defmacro with-connection
-  "Eval `body` within the context of the current environment's
-  database connection."
-  [& body]
-  `(let [connection# (env :database-url)]
-     (if (blank? connection#)
-       (throw (Exception. "Please set the DATABASE_URL environment variable.")))
-     (jdbc/with-connection connection#
-       ~@body)))
-
-(defn- assert-direction
-  [ns direction]
-  (assert (ns-resolve ns direction)
-          (format "Namespace %s must have a #'%s fn." ns direction)))
-
-(defn- resolve-var [ns var]
-  (if-let [v (ns-resolve ns var)]
-    {:var v :doc (:doc (meta v))}))
-
-(defn make-migration
-  "Make a new migration from ns."
-  [ns]
-  (assert-direction ns 'up)
-  (assert-direction ns 'down)
-  {:ns ns
-   :up (resolve-var ns 'up)
-   :down (resolve-var ns 'up)
-   :version (last (split (str ns) #"\."))})
+;; (defn make-migration
+;;   "Make a new migration from ns."
+;;   [ns]
+;;   (Migration.
+;;    ns
+;;    (parse-version ns)
+;;    (resolve-var ns 'up)
+;;    (resolve-var ns 'up)))
 
 ;; (make-migration 'migrate.db.test.20120817142900-create-regions)
