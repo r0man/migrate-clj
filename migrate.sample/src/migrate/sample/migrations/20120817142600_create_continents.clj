@@ -1,12 +1,12 @@
-(ns migrate.db.test.20120817142600-create-continents
+(ns migrate.sample.migrations.20120817142600-create-continents
   (:require [clojure.java.jdbc :as jdbc]))
 
 (defn up
   "Create continents table."
   [] (jdbc/create-table
-      "continents"
+      :continents
       [:id :text "PRIMARY KEY"]))
 
 (defn down
   "Drop continents table."
-  [] (jdbc/drop-table "continents"))
+  [] (jdbc/drop-table :continents))

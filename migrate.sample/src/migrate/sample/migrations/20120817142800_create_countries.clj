@@ -1,4 +1,4 @@
-(ns migrate.db.test.20120817142800-create-countries
+(ns migrate.sample.migrations.20120817142800-create-countries
   (:require [clojure.java.jdbc :as jdbc]))
 
 (defn up
