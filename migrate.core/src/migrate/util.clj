@@ -1,29 +1,30 @@
 (ns migrate.util
+  (:refer-clojure :exclude [replace])
   (:require [environ.core :refer [env]]
             [clj-time.core :refer [date-time]]
-            [clojure.string :refer [split]]
+            [clojure.string :refer [replace split]]
             [clojure.java.classpath :refer [classpath]]
             [clojure.tools.namespace.find :refer [find-namespaces]]
-            [inflections.number :refer [parse-integer]]))
+            [inflections.util :refer [parse-integer parse-url]]))
 
 (def ^:dynamic *version-regex*
   #".*(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2}).*")
 
-(defn parse-url
-  "Parse `s` as an URI and return a Ring compatible map."
+(defn parse-db-spec
+  "Parse `s` as a database spec return a clojure/java.jdbc and Korma compatible map."
   [s]
-  (if-let [matches (re-matches #"([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/[^?]*)(\?(.*))?))" s)]
-    {:scheme (nth matches 1)
-     :user (nth matches 3)
-     :password (nth matches 4)
-     :server-name (nth matches 6)
-     :server-port (parse-integer (nth matches 8))
-     :uri (nth matches 10)
-     :query-string (nth matches 12)
-     :params (->> (split (or (nth matches 12) "") #"&")
-                  (map #(split %1 #"="))
-                  (mapcat #(vector (keyword (first %1)) (second %1)))
-                  (apply hash-map))}))
+  (if-let [{:keys [server-name server-port query-string] :as url}
+           (parse-url s)]
+    {:subprotocol (:scheme url)
+     :user (:user url)
+     :password (:password url)
+     :subname (str "//" server-name
+                   (if server-port
+                     (str ":" server-port))
+                   (:uri url) (if query-string (str "?" query-string)))
+     :host server-name
+     :port server-port
+     :db (replace (:uri url) #"^/" "")}))
 
 (defn parse-version
   "Parse the version timestamp from the namespace `ns`."
