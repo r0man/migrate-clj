@@ -1,10 +1,10 @@
 (ns migrate.test.core
-  (:import [java.sql DriverManager SQLException])
+  (:import [java.sql SQLException])
   (:require [clojure.java.jdbc :as sql]
             [clj-time.core :refer [date-time]]
+            [clj-time.coerce :refer [to-date-time]]
             [migrate.connection :refer [with-connection]])
-  (:use [clj-time.coerce :only (to-date-time)]
-        clojure.test
+  (:use clojure.test
         environ.core
         migrate.core
         migrate.test))
