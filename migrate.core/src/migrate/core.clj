@@ -92,20 +92,20 @@
       [(format "SELECT * FROM %s" (jdbc/as-identifier *migration-table*))]
       (into [] (map #(assoc %1 :version (to-date-time (:version %1))) result-set)))))
 
-;; (defn find-applicable-migrations
-;;   "Returns all migrations that have to be run to migrate from
-;;   from-version to to-version."
-;;   [migrations from-version to-version]
-;;   (let [from-version (to-long from-version)
-;;         to-version (to-long to-version)]
-;;     (if (or (nil? from-version)
-;;             (and to-version (<= from-version to-version)))
-;;       (filter #(and (or (nil? from-version)
-;;                         (< from-version (to-long (:version %))))
-;;                     (or (nil? to-version)
-;;                         (<= (to-long (:version %)) to-version)))
-;;               (sort-by :version migrations))
-;;       (reverse (find-applicable-migrations migrations to-version from-version)))))
+(defn find-applicable-migrations
+  "Returns all migrations that have to be run to migrate from
+  from-version to to-version."
+  [migrations from-version to-version]
+  (let [from-version (to-long from-version)
+        to-version (to-long to-version)]
+    (if (or (nil? from-version)
+            (and to-version (<= from-version to-version)))
+      (filter #(and (or (nil? from-version)
+                        (< from-version (to-long (:version %))))
+                    (or (nil? to-version)
+                        (<= (to-long (:version %)) to-version)))
+              (sort-by :version migrations))
+      (reverse (find-applicable-migrations migrations to-version from-version)))))
 
 (defn find-migration-by-version
   "Returns the migration with the given version."
