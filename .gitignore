@@ -12,3 +12,4 @@ native
 /.lein-failures
 /.lein-plugins/checksum
 /migrate.core/.lein-env
+/migrate.sample/.lein-env
