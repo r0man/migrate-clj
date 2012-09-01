@@ -9,4 +9,4 @@
   :plugins [[environ/environ.lein "0.3.0"]]
   :hooks [environ.leiningen.hooks]
   :profiles {:dev {:env {:example-db "postgresql://localhost/example_test"}}}
-  :databases {:example-db migrate.example.migrations})
+  :migrations {:example-db migrate.example.migrations})

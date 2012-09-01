@@ -3,7 +3,6 @@
   :url "http://github.com/r0man/migrate-clj"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[environ/environ.lein "0.2.1"]
-                 [migrate/migrate.core "0.1.0-SNAPSHOT"]
+  :dependencies [[migrate/migrate.core "0.1.0-SNAPSHOT"]
                  [org.clojure/clojure "1.4.0"]]
   :eval-in-leiningen true)
