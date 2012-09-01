@@ -17,9 +17,7 @@
   :profiles {:dev {:env {:migrate-db "postgresql://localhost/migrate_test"}
                    :dependencies [[migrate/migrate.example "0.1.0-SNAPSHOT"]
                                   [org.slf4j/slf4j-log4j12 "1.6.4"]
-                                  [postgresql/postgresql "9.1-901.jdbc4"]]}
-             :test {:env {:migrate-db "postgresql://localhost/migrate_test"}
-                    :resource-paths ["test-resources"]}}
+                                  [postgresql/postgresql "9.1-901.jdbc4"]]}}
   :plugins [[environ/environ.lein "0.3.0"]]
   :hooks [environ.leiningen.hooks]
   :eval-in :leiningen)
