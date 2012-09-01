@@ -25,7 +25,7 @@
 (defn template
   "Returns the new template filename."
   [base-ns created-at description]
-  (->> [(format "(ns %s\n  \"%s\")"
+  (->> [(format "(ns %s\n  \"%s\"\n  (:require [clojure.java.jdbc :as jdbc]))"
                 (template-ns base-ns created-at description)
                 (replace (capitalize description) #"\.*$" "."))
         "(defn up []\n  )"
@@ -44,9 +44,9 @@
 (defn new [project db-name & args]
   (let [base-ns (get (:migrations project) (keyword db-name))]
     (when-not base-ns
-      (println "migrate: Can't find migration base ns in project.clj for db %s." db-name)
+      (println (format "Can't find migration base ns in project.clj for db %s." db-name))
       (System/exit 1))
     (create-template
      (first (:source-paths project))
      base-ns
-     (apply str args))))
+     (join " " args))))
