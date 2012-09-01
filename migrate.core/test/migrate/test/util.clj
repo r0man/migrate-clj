@@ -3,11 +3,12 @@
             [clojure.test :refer :all]
             [migrate.util :refer :all]))
 
-(deftest test-parse-version
-  (is (nil? (parse-version nil)))
-  (is (nil? (parse-version "")))
-  (is (= (date-time 2012 8 17 14 29)
-         (parse-version 'migrate.db.test.20120817142900-create-continents-table))))
+(deftest test-format-time
+  (is (= "20120817142955" (format-time (date-time 2012 8 17 14 29 55)))))
+
+(deftest test-format-human-time
+  (is (re-matches #"Fri, 17 Aug 2012 14:29:55 \+...."
+                  (format-human-time (date-time 2012 8 17 14 29 55)))))
 
 (deftest test-re-ns-matches
   (is (empty? (re-ns-matches #"UNKNOWN-NAMESPACE")))
@@ -30,6 +31,12 @@
     (is (= "localhost" (:host spec)))
     (is (= 5432 (:port spec)))
     (is (= "migrate_test" (:db spec)))))
+
+(deftest test-parse-time
+  (is (nil? (parse-time nil)))
+  (is (nil? (parse-time "")))
+  (is (= (date-time 2012 8 17 14 29)
+         (parse-time 'migrate.db.test.20120817142900-create-continents-table))))
 
 (deftest test-resolve-db-spec
   (are [db-spec expected]

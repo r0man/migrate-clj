@@ -3,14 +3,13 @@
   (:import java.sql.SQLException)
   (:require [clj-time.core :refer [now]]
             [clj-time.coerce :refer [to-date-time to-timestamp to-long]]
-            [clj-time.format :refer [formatters unparse]]
             [clojure.java.classpath :refer [classpath]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [blank?]]
             [clojure.tools.logging :refer [info]]
             [commandline.core :refer [print-help with-commandline]]
             [migrate.connection :refer [with-connection]]
-            [migrate.util :refer [parse-version re-ns-matches]]))
+            [migrate.util :refer [format-time parse-time re-ns-matches]]))
 
 (def ^:dynamic *migration-table* :schema-migrations)
 
@@ -31,7 +30,7 @@
   (require ns)
   (map->Migration
    {:ns ns
-    :version (parse-version ns)
+    :version (parse-time ns)
     :up (ns-resolve ns 'up)
     :down (ns-resolve ns 'down)}))
 
@@ -59,9 +58,6 @@
    (to-date-time version)
    (to-date-time version)
    :else (latest-version ns)))
-
-(defn format-time [date]
-  (if date (unparse (formatters :rfc822) (to-date-time date))))
 
 (defn create-migration-table
   "Create the database table that holds the migration metadata."

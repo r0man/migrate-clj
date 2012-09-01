@@ -1,7 +1,11 @@
 (ns migrate.util
+  (:import org.joda.time.format.DateTimeFormat
+           org.joda.time.DateTimeZone)
   (:refer-clojure :exclude [replace])
   (:require [environ.core :refer [env]]
             [clj-time.core :refer [date-time]]
+            [clj-time.coerce :refer [to-date-time to-long]]
+            [clj-time.format :refer [formatters unparse parse]]
             [clojure.string :refer [replace split]]
             [clojure.java.classpath :refer [classpath]]
             [clojure.tools.namespace.find :refer [find-namespaces]]
@@ -9,6 +13,14 @@
 
 (def ^:dynamic *version-regex*
   #".*(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2}).*")
+
+(defn format-time
+  "Format `time` using the YYYYMMddHHmmss pattern."
+  [time] (unparse (DateTimeFormat/forPattern "YYYYMMddHHmmss") (to-date-time time)))
+
+(defn format-human-time
+  "Format `time` in a human readable format."
+  [time] (unparse (formatters :rfc822) (to-date-time time)))
 
 (defn format-subname
   "Format the database spec subname from `url`."
@@ -28,6 +40,14 @@
      :host (:server-name url)
      :port (:server-port url)
      :db (replace (:uri url) #"^/" "")}))
+
+(defn parse-time
+  "Format `s` as time using the YYYYMMddHHmmss pattern."
+  [s]
+  (if-let [matches (re-matches #".*(\d{14}).*" (str s))]
+    (.withZoneRetainFields
+     (parse (DateTimeFormat/forPattern "YYYYMMddHHmmss") (second matches))
+     DateTimeZone/UTC)))
 
 (defn parse-version
   "Parse the version timestamp from the namespace `ns`."

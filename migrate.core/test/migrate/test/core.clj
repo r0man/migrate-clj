@@ -27,9 +27,6 @@
       (date-time 2012 8 17 14 29)
       'migrate.example.20120817142900-create-regions)))
 
-(deftest test-format-time
-  (is (re-matches #"Thu, 01 Jan 1970 00:00:00 \+...." (format-time (java.util.Date. 0)))))
-
 (deftest test-find-migrations
   (let [migrations (find-migrations 'migrate.example)]
     (is (= 3 (count migrations)))

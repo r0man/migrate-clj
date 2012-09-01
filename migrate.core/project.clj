@@ -22,5 +22,4 @@
                     :resource-paths ["test-resources"]}}
   :plugins [[environ/environ.lein "0.3.0"]]
   :hooks [environ.leiningen.hooks]
-  ;; :main migrate.core
   :eval-in :leiningen)
