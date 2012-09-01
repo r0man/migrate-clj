@@ -5,8 +5,9 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
-  :dependencies [[environ "0.3.0"]
-                 [clj-time "0.4.4"]
+  :dependencies [[clj-time "0.4.4"]
+                 [commandline-clj "0.1.2"]
+                 [environ "0.3.0"]
                  [inflections "0.7.2-SNAPSHOT"]
                  [org.clojure/clojure "1.4.0"]
                  [org.clojure/java.classpath "0.2.0"]
@@ -21,4 +22,5 @@
                     :resource-paths ["test-resources"]}}
   :plugins [[environ/environ.lein "0.3.0"]]
   :hooks [environ.leiningen.hooks]
+  ;; :main migrate.core
   :eval-in :leiningen)

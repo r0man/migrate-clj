@@ -1,11 +1,15 @@
 (ns migrate.core
+  (:gen-class)
   (:import java.sql.SQLException)
   (:require [clj-time.core :refer [now]]
-            [clj-time.format :refer [formatters unparse]]
             [clj-time.coerce :refer [to-date-time to-timestamp to-long]]
-            [clojure.java.jdbc :as jdbc]
+            [clj-time.format :refer [formatters unparse]]
             [clojure.java.classpath :refer [classpath]]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [blank?]]
             [clojure.tools.logging :refer [info]]
+            [commandline.core :refer [print-help with-commandline]]
+            [migrate.connection :refer [with-connection]]
             [migrate.util :refer [parse-version re-ns-matches]]))
 
 (def ^:dynamic *migration-table* :schema-migrations)
@@ -49,7 +53,9 @@
   "Returns the target version of the migrations in `ns`."
   [ns version]
   (cond
-   (= 0 version) 0
+   (or (= 0 version)
+       (= "0" version))
+   0
    (to-date-time version)
    (to-date-time version)
    :else (latest-version ns)))
@@ -181,3 +187,17 @@
        (if (= (direction current-version target-version) :up)
          (run-up migration)
          (run-down migration))))))
+
+(defn -main [& args]
+  (with-commandline [args args]
+    [[d database "Run the migrations in the database DB." :string "DB"]
+     [h help "Print this help"]
+     [n namespace "Run the migrations in the namespace NS." :string "NS"]]
+    (when (or (blank? database)
+              (blank? namespace))
+      (print-help "migrate [OPTIONS] [VERSION]")
+      (System/exit 1))
+    (with-connection database
+      (run namespace (first args)))))
+
+(comment (apply -main (into-array String ["-n" "migrate.example" "-d" "postgresql://localhost/migrate_test"])))
