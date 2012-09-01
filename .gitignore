@@ -16,3 +16,4 @@ native
 /migrate.example/.lein-env
 /migrate.example/checkouts/migrate.core
 /migrate.example/checkouts/migrate.lein
+/migrate.example/target/stale/dependencies

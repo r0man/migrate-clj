@@ -7,7 +7,6 @@
                  [org.clojure/clojure "1.4.0"]
                  [org.clojure/java.jdbc "0.2.3"]]
   :plugins [[environ/environ.lein "0.3.0"]]
-  :hooks [environ.leiningen.hooks
-          migrate.leiningen.hooks]
+  :hooks [environ.leiningen.hooks]
   :profiles {:dev {:env {:example-db "postgresql://localhost/example_test"}}}
-  :migrate-dbs {:example-db migrate.example.migrations})
+  :databases {:example-db migrate.example.migrations})
