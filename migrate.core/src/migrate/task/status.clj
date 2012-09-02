@@ -6,7 +6,7 @@
 (defn status
   "Print the status of all migrations in `base-ns`."
   [base-ns]
-  (let [pattern "%-32s %-8s %-32s %s"]
+  (let [pattern "%-32s %-8s %-26s %s"]
     (println (format pattern "VERSION" "STATUS" "WHEN" "DESCRIPTION"))
     (println (apply str (repeat 120 "-")))
     (doseq [migration (find-migrations base-ns)

@@ -17,8 +17,7 @@
   (is (= "20120817142955" (format-time (date-time 2012 8 17 14 29 55)))))
 
 (deftest test-format-human-time
-  (is (re-matches #"Fri, 17 Aug 2012 14:29:55 \+...."
-                  (format-human-time (date-time 2012 8 17 14 29 55)))))
+  (is (= "Fri, 17 Aug 2012 14:29:55" (format-human-time (date-time 2012 8 17 14 29 55)))))
 
 (deftest test-re-ns-matches
   (is (empty? (re-ns-matches #"UNKNOWN-NAMESPACE")))

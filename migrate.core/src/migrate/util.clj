@@ -25,7 +25,7 @@
 
 (defn format-human-time
   "Format `time` in a human readable format."
-  [time] (unparse (formatters :rfc822) (to-date-time time)))
+  [time] (unparse (DateTimeFormat/forPattern "EEE, dd MMM YYYY HH:mm:ss") (to-date-time time)))
 
 (defn format-subname
   "Format the database spec subname from `url`."
