@@ -13,7 +13,8 @@
 (defn serialize-migration
   "Serialize the `migration` row."
   [migration]
-  (-> (update-in migration [:created-at] to-timestamp)
+  (-> (select-keys migration [:created-at :version])
+      (update-in [:created-at] #(to-timestamp (or %1 (now))))
       (update-in [:version] to-timestamp)))
 
 (defn create-migration-table
@@ -22,7 +23,6 @@
   (jdbc/create-table
    table
    [:version "timestamp" "not null" "unique"]
-   [:description "text"]
    [:created-at "timestamp" "not null"]))
 
 (defn drop-migration-table
@@ -32,10 +32,7 @@
 (defn insert-migration
   "Insert the migration's metadata into the database."
   [table migration]
-  (jdbc/insert-record
-   table
-   {:created-at (to-timestamp (now))
-    :version (to-timestamp (:version migration))}))
+  (jdbc/insert-record table (serialize-migration migration)))
 
 (defn delete-migration
   "Delete the migration's metadata from the database."
