@@ -4,6 +4,18 @@
             [clj-time.core :refer [now]]
             [clj-time.coerce :refer [to-date-time to-timestamp]]))
 
+(defn deserialize-migration
+  "Deserialize the `migration` row."
+  [migration]
+  (-> (update-in migration [:created-at] to-date-time)
+      (update-in [:version] to-date-time)))
+
+(defn serialize-migration
+  "Serialize the `migration` row."
+  [migration]
+  (-> (update-in migration [:created-at] to-timestamp)
+      (update-in [:version] to-timestamp)))
+
 (defn create-migration-table
   "Create the database table that holds the migration metadata."
   [table]
@@ -30,7 +42,7 @@
   [table migration]
   (jdbc/delete-rows
    (jdbc/as-identifier table)
-   ["version=?" (to-timestamp (:version migration))]))
+   ["version = ?" (to-timestamp (:version migration))]))
 
 (defn select-migration-by-version
   "Returns the current schema version, or nil if no migration has been
@@ -39,9 +51,7 @@
   (jdbc/with-query-results result-set
     [(format "SELECT * FROM %s WHERE version = ?" (jdbc/as-identifier table))
      (to-timestamp version)]
-    (if-let [migration (first result-set)]
-      (-> (update-in migration [:created-at] to-date-time)
-          (update-in [:version] to-date-time)))))
+    (first (map deserialize-migration result-set))))
 
 (defn select-current-version
   "Returns the current schema version, or nil if no migration has been
@@ -49,12 +59,12 @@
   [table]
   (jdbc/with-query-results result-set
     [(str "SELECT MAX(version) AS version FROM " (jdbc/as-identifier table))]
-    (to-date-time (:version (first result-set)))))
+    (:version (first (map deserialize-migration result-set)))))
 
 (defn select-migrations [table]
   (jdbc/with-query-results result-set
     [(format "SELECT * FROM %s" (jdbc/as-identifier table))]
-    (doall (map #(assoc %1 :version (to-date-time (:version %1))) result-set))))
+    (doall (map deserialize-migration result-set))))
 
 (defn table-exists? [table]
   "Returns true if the migration-table exists, otherwise false."
