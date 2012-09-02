@@ -55,8 +55,8 @@
   (drop-migration-table *migration-table*)
   (is (thrown? SQLException (select-migrations *migration-table*))))
 
-(dbtest test-select-version
+(dbtest test-select-migration-by-version
   (let [migration (first (find-migrations 'migrate.example))]
     (insert-migration *migration-table* migration)
-    (let [found (select-version *migration-table* (:version migration))]
+    (let [found (select-migration-by-version *migration-table* (:version migration))]
       (is (= (:version migration) (:version found))))))

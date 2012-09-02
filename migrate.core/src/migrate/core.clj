@@ -85,7 +85,7 @@
     (println (format pattern "VERSION" "STATUS" "WHEN" "DESCRIPTION"))
     (println (apply str (repeat 120 "-")))
     (doseq [migration (find-migrations ns)
-            :let [found (select-version *migration-table* (:version migration))]]
+            :let [found (select-migration-by-version *migration-table* (:version migration))]]
       (-> (format
            pattern
            (format-time (:version migration))

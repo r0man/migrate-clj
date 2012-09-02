@@ -32,7 +32,7 @@
    (jdbc/as-identifier table)
    ["version=?" (to-timestamp (:version migration))]))
 
-(defn select-version
+(defn select-migration-by-version
   "Returns the current schema version, or nil if no migration has been
   run yet."
   [table version]
