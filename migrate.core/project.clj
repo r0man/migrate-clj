@@ -19,6 +19,4 @@
                                   [postgresql/postgresql "9.1-901.jdbc4"]]}}
   ;; :plugins [[environ/environ.lein "0.3.0"]]
   ;; :hooks [environ.leiningen.hooks]
-  ;; :aot [migrate.main]
-  ;; :main migrate.main
-  :eval-in :leiningen)
+  :main migrate.tool)

@@ -81,4 +81,6 @@
   [db-spec & body]
   `(jdbc/with-connection ~db-spec
      (jdbc/with-quoted-identifiers (identifier-quote-string (jdbc/connection))
+       (if-not (table-exists? *migration-table*)
+         (create-migration-table *migration-table*))
        ~@body)))
