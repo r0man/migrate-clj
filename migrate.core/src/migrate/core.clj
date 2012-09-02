@@ -90,7 +90,7 @@
            pattern
            (format-time (:version migration))
            (if found "DONE" "PENDING")
-           (or (format-time (:created-at found)) "-")
+           (or (format-time (:applied-at found)) "-")
            (:doc (meta (:up migration))))
           (println)))))
 
