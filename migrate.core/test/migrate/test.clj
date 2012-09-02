@@ -6,7 +6,11 @@
 (def test-db-spec "postgresql://localhost/migrate_test")
 
 (defmacro with-version-table [& body]
-  `(try (do (create-migration-table *migration-table*) ~@body)
+  `(try (do
+          (try (drop-migration-table *migration-table*)
+               (catch Exception e# nil))
+          (create-migration-table *migration-table*)
+          ~@body)
         (finally
          (try (drop-migration-table *migration-table*)
               (catch Exception e# nil)))))
@@ -18,4 +22,5 @@
         (try
           (with-version-table
             ~@body)
-          (finally (jdbc/set-rollback-only)))))))
+          (finally
+           (jdbc/set-rollback-only)))))))
