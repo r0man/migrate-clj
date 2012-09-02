@@ -2,8 +2,7 @@
   (:import [java.sql SQLException])
   (:require [clojure.java.jdbc :as sql]
             [clj-time.core :refer [date-time]]
-            [clj-time.coerce :refer [to-date-time]]
-            [migrate.connection :refer [with-connection]])
+            [clj-time.coerce :refer [to-date-time]])
   (:use clojure.test
         environ.core
         migrate.core
@@ -108,10 +107,3 @@
            (select-current-version *migration-table*)))
     (run ns 0)
     (is (nil? (select-current-version *migration-table*)))))
-
-(dbtest test-print-migrations
-  (print-migrations 'migrate.example)
-  (run 'migrate.example)
-  (is (= (:version (latest-migration 'migrate.example))
-         (select-current-version *migration-table*)))
-  (print-migrations 'migrate.example))

@@ -1,11 +1,9 @@
 (ns migrate.test
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :refer [deftest]]
-            [migrate.core :refer [*migration-table*]]
-            [migrate.sql :refer [create-migration-table drop-migration-table]]
-            [migrate.connection :refer [with-connection]]))
+            [migrate.sql :refer :all]))
 
-(def test-db :migrate-db)
+(def test-db-spec "postgresql://localhost/migrate_test")
 
 (defmacro with-version-table [& body]
   `(try (do (create-migration-table *migration-table*) ~@body)
@@ -15,7 +13,7 @@
 
 (defmacro dbtest [name & body]
   `(deftest ~name
-     (with-connection test-db
+     (with-connection test-db-spec
        (jdbc/transaction
         (try
           (with-version-table

@@ -4,6 +4,8 @@
             [clj-time.core :refer [now]]
             [clj-time.coerce :refer [to-date-time to-timestamp]]))
 
+(def ^:dynamic *migration-table* :schema-migrations)
+
 (defn deserialize-migration
   "Deserialize the `migration` row."
   [migration]

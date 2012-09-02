@@ -1,5 +1,4 @@
 (ns migrate.core
-  (:gen-class)
   (:require [clj-time.core :refer [now]]
             [clj-time.coerce :refer [to-date-time to-timestamp to-long]]
             [clojure.java.classpath :refer [classpath]]
@@ -7,11 +6,8 @@
             [clojure.string :refer [blank?]]
             [clojure.tools.logging :refer [info]]
             [commandline.core :refer [print-help with-commandline]]
-            [migrate.connection :refer [with-connection]]
             [migrate.sql :refer :all]
             [migrate.util :refer [format-time parse-time re-ns-matches]]))
-
-(def ^:dynamic *migration-table* :schema-migrations)
 
 (defrecord Migration [ns version up down])
 
@@ -125,17 +121,3 @@
        (if (= (direction current-version target-version) :up)
          (run-up migration)
          (run-down migration))))))
-
-;; (defn -main [& args]
-;;   (with-commandline [args args]
-;;     [[d database "Run the migrations in the database DB." :string "DB"]
-;;      [h help "Print this help"]
-;;      [n namespace "Run the migrations in the namespace NS." :string "NS"]]
-;;     (when (or (blank? database)
-;;               (blank? namespace))
-;;       (print-help "migrate [OPTIONS] [VERSION]")
-;;       (System/exit 1))
-;;     (with-connection database
-;;       (run namespace (first args)))))
-
-;; (comment (apply -main (into-array String ["-n" "migrate.example" "-d" "postgresql://localhost/migrate_test"])))
