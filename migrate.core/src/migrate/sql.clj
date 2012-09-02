@@ -54,7 +54,7 @@
 (defn select-migrations [table]
   (jdbc/with-query-results result-set
     [(format "SELECT * FROM %s" (jdbc/as-identifier table))]
-    (into [] (map #(assoc %1 :version (to-date-time (:version %1))) result-set))))
+    (doall (map #(assoc %1 :version (to-date-time (:version %1))) result-set))))
 
 (defn table-exists? [table]
   "Returns true if the migration-table exists, otherwise false."
