@@ -3,6 +3,16 @@
             [clojure.test :refer :all]
             [migrate.util :refer :all]))
 
+(deftest test-find-base-ns
+  (are [project db-name expected]
+    (is (= expected (find-base-ns project db-name)))
+    {:migrations {}}
+    :example-db nil
+    {:migrations {:example-db 'migrate.example.migrations}}
+    :not-existing nil
+    {:migrations {:example-db 'migrate.example.migrations}}
+    :example-db 'migrate.example.migrations))
+
 (deftest test-format-time
   (is (= "20120817142955" (format-time (date-time 2012 8 17 14 29 55)))))
 
@@ -37,13 +47,3 @@
   (is (nil? (parse-time "")))
   (is (= (date-time 2012 8 17 14 29)
          (parse-time 'migrate.db.test.20120817142900-create-continents-table))))
-
-(deftest test-resolve-db-spec
-  (are [db-spec expected]
-    (is (=  expected (resolve-db-spec db-spec)))
-    nil nil
-    "" ""
-    "x" "x"
-    :migrate-db "postgresql://localhost/migrate_test"
-    ":migrate-db" "postgresql://localhost/migrate_test"
-    "postgresql://localhost/migrate_test" "postgresql://localhost/migrate_test"))

@@ -14,6 +14,11 @@
 (def ^:dynamic *version-regex*
   #".*(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2}).*")
 
+(defn find-base-ns
+  "Find the base migration namespace for `db-name` in `project`."
+  [project db-name]
+  (get (:migrations project) (keyword db-name)))
+
 (defn format-time
   "Format `time` using the YYYYMMddHHmmss pattern."
   [time] (unparse (DateTimeFormat/forPattern "YYYYMMddHHmmss") (to-date-time time)))
@@ -61,12 +66,11 @@
   "Finds all namespaces on the classpath matching `re`."
   [re] (filter #(re-matches re (str %1)) (find-namespaces (classpath))))
 
-(defn resolve-db-spec
-  "Reolve `db-spec` via environ or return `db-spec`."
-  [db-spec]
-  (cond
-   (keyword? db-spec)
-   (env db-spec)
-   (and (string? db-spec) (= \: (first db-spec)))
-   (env (keyword (apply str (rest db-spec))))
-   :else db-spec))
+(defmacro with-base-ns
+  "Eval `body` with `sym` bound to the migration base namespace for `db-name`."
+  [[project db-name sym] & body]
+  `(let [db-name# ~db-name]
+     (if-let [~sym (find-base-ns ~project db-name#)]
+       (do ~@body)
+       (do (println (format "Can't find migration base ns in project.clj for db %s." db-name#))
+           (System/exit 1)))))
