@@ -1,12 +1,20 @@
 (ns migrate.test.sql
   (:import [java.sql SQLException])
   (:require [clj-time.core :refer [date-time]]
-            [clojure.java.jdbc :as sql]
-            [migrate.connection :refer [with-connection]])
+            [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         migrate.core
         migrate.sql
         migrate.test))
+
+(deftest test-identifier-quote-string
+  (with-connection test-db-spec
+    (identifier-quote-string (jdbc/connection))))
+
+(deftest test-with-connection
+  (with-connection test-db-spec
+    (is (jdbc/connection))
+    (is (= "\"x\"" (@#'jdbc/*as-str* "x")))))
 
 (dbtest test-create-migration-table
   (drop-migration-table *migration-table*)

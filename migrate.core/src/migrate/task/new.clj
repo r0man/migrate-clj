@@ -41,12 +41,7 @@
     (spit filename (template base-ns created-at description))
     filename))
 
-(defn new [project db-name & args]
-  (let [base-ns (get (:migrations project) (keyword db-name))]
-    (when-not base-ns
-      (println (format "Can't find migration base ns in project.clj for db %s." db-name))
-      (System/exit 1))
-    (create-template
-     (first (:source-paths project))
-     base-ns
-     (join " " args))))
+(defn new
+  "Create a new migration template."
+  [directory base-ns & args]
+  (create-template directory base-ns (join " " args)))
