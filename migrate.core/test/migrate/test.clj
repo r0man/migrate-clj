@@ -1,15 +1,16 @@
 (ns migrate.test
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :refer [deftest]]
+            [migrate.core :refer [*migration-table*]]
             [migrate.sql :refer [create-migration-table drop-migration-table]]
             [migrate.connection :refer [with-connection]]))
 
 (def test-db :migrate-db)
 
 (defmacro with-version-table [& body]
-  `(try (do (create-migration-table) ~@body)
+  `(try (do (create-migration-table *migration-table*) ~@body)
         (finally
-         (try (drop-migration-table)
+         (try (drop-migration-table *migration-table*)
               (catch Exception e# nil)))))
 
 (defmacro dbtest [name & body]

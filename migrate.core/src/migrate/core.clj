@@ -11,6 +11,8 @@
             [migrate.sql :refer :all]
             [migrate.util :refer [format-time parse-time re-ns-matches]]))
 
+(def ^:dynamic *migration-table* :schema-migrations)
+
 (defrecord Migration [ns version up down])
 
 (defn direction
@@ -83,7 +85,7 @@
     (println (format pattern "VERSION" "STATUS" "WHEN" "DESCRIPTION"))
     (println (apply str (repeat 120 "-")))
     (doseq [migration (find-migrations ns)
-            :let [found (select-version (:version migration))]]
+            :let [found (select-version *migration-table* (:version migration))]]
       (-> (format
            pattern
            (format-time (:version migration))
@@ -98,7 +100,7 @@
   [migration]
   (info (str "+ " (format-time (:version migration)) " " (:doc (meta (:up migration)))))
   ((:up migration))
-  (insert-migration migration))
+  (insert-migration *migration-table* migration))
 
 (defn run-down
   "Run the migration by invoking the fn stored under the :down key and
@@ -106,16 +108,16 @@
   [migration]
   (info (str "- " (format-time (:version migration)) " " (:doc (meta (:down migration)))))
   ((:down migration))
-  (delete-migration migration))
+  (delete-migration *migration-table* migration))
 
 (defn run
   "Run all database migrations to get from the current to the target
   version. Providing 0 as the target version runs all migrations down
   starting with the current."
   [ns & [version]]
-  (if-not (migration-table?)
-    (create-migration-table))
-  (let [current-version (select-current-version)
+  (if-not (table-exists? *migration-table*)
+    (create-migration-table *migration-table*))
+  (let [current-version (select-current-version *migration-table*)
         target-version (target-version ns version)]
     (jdbc/transaction
      (info (format "Running migrations in %s from %s to %s." ns current-version target-version))

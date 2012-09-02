@@ -67,51 +67,51 @@
 (dbtest test-run-up
   (let [migrations (find-migrations 'migrate.example)]
     (is (run-up (nth migrations 0)))
-    (is (= (date-time 2012 8 17 14 26) (select-current-version)))
+    (is (= (date-time 2012 8 17 14 26) (select-current-version *migration-table*)))
     (is (run-up (nth migrations 1)))
-    (is (= (date-time 2012 8 17 14 28) (select-current-version)))
+    (is (= (date-time 2012 8 17 14 28) (select-current-version *migration-table*)))
     (is (run-up (nth migrations 2)))
-    (is (= (date-time 2012 8 17 14 29) (select-current-version)))))
+    (is (= (date-time 2012 8 17 14 29) (select-current-version *migration-table*)))))
 
 (dbtest test-run-down
   (let [migrations (find-migrations 'migrate.example)]
     (doall (map run-up migrations))
-    (is (= (date-time 2012 8 17 14 29) (select-current-version)))
+    (is (= (date-time 2012 8 17 14 29) (select-current-version *migration-table*)))
     (is (run-down (nth migrations 2)))
-    (is (= (date-time 2012 8 17 14 28) (select-current-version)))
+    (is (= (date-time 2012 8 17 14 28) (select-current-version *migration-table*)))
     (is (run-down (nth migrations 1)))
-    (is (= (date-time 2012 8 17 14 26) (select-current-version)))
+    (is (= (date-time 2012 8 17 14 26) (select-current-version *migration-table*)))
     (is (run-down (nth migrations 0)))
-    (is (nil? (select-current-version)))))
+    (is (nil? (select-current-version *migration-table*)))))
 
 (dbtest test-run-all-up
   (run 'migrate.example)
   (is (= (:version (latest-migration 'migrate.example))
-         (select-current-version))))
+         (select-current-version *migration-table*))))
 
 (dbtest test-run-up-to
   (doseq [migration (find-migrations 'migrate.example)]
     (run 'migrate.example (:version migration))
-    (is (= (:version migration) (select-current-version)))))
+    (is (= (:version migration) (select-current-version *migration-table*)))))
 
 (dbtest test-run-down-to
   (let [ns 'migrate.example]
     (run ns)
     (doseq [migration (reverse (find-migrations ns))]
       (run ns (:version migration))
-      (is (= (:version migration) (select-current-version))))))
+      (is (= (:version migration) (select-current-version *migration-table*))))))
 
 (dbtest test-run-all-down
   (let [ns 'migrate.example]
     (run ns)
     (is (= (:version (latest-migration 'migrate.example))
-           (select-current-version)))
+           (select-current-version *migration-table*)))
     (run ns 0)
-    (is (nil? (select-current-version)))))
+    (is (nil? (select-current-version *migration-table*)))))
 
 (dbtest test-print-migrations
   (print-migrations 'migrate.example)
   (run 'migrate.example)
   (is (= (:version (latest-migration 'migrate.example))
-         (select-current-version)))
+         (select-current-version *migration-table*)))
   (print-migrations 'migrate.example))
