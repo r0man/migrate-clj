@@ -1,7 +1,7 @@
 (ns migrate.test
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :refer [deftest]]
-            [migrate.core :refer [create-migration-table drop-migration-table]]
+            [migrate.sql :refer [create-migration-table drop-migration-table]]
             [migrate.connection :refer [with-connection]]))
 
 (def test-db :migrate-db)

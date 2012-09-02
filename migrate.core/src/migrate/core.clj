@@ -1,6 +1,5 @@
 (ns migrate.core
   (:gen-class)
-  (:import java.sql.SQLException)
   (:require [clj-time.core :refer [now]]
             [clj-time.coerce :refer [to-date-time to-timestamp to-long]]
             [clojure.java.classpath :refer [classpath]]
@@ -9,9 +8,8 @@
             [clojure.tools.logging :refer [info]]
             [commandline.core :refer [print-help with-commandline]]
             [migrate.connection :refer [with-connection]]
+            [migrate.sql :refer :all]
             [migrate.util :refer [format-time parse-time re-ns-matches]]))
-
-(def ^:dynamic *migration-table* :schema-migrations)
 
 (defrecord Migration [ns version up down])
 
@@ -58,64 +56,6 @@
    (to-date-time version)
    (to-date-time version)
    :else (latest-version ns)))
-
-(defn create-migration-table
-  "Create the database table that holds the migration metadata."
-  []
-  (jdbc/create-table
-   *migration-table*
-   [:version "timestamp" "not null" "unique"]
-   [:description "text"]
-   [:created-at "timestamp" "not null"]))
-
-(defn drop-migration-table
-  "Drop the database table that holds the migration metadata."
-  [] (jdbc/drop-table *migration-table*))
-
-(defn insert-migration
-  "Insert the migration's metadata into the database."
-  [migration]
-  (jdbc/insert-record
-   *migration-table*
-   {:created-at (to-timestamp (now))
-    :version (to-timestamp (:version migration))}))
-
-(defn delete-migration
-  "Delete the migration's metadata from the database."
-  [migration]
-  (jdbc/delete-rows
-   (jdbc/as-identifier *migration-table*)
-   ["version=?" (to-timestamp (:version migration))]))
-
-(defn select-version
-  "Returns the current schema version, or nil if no migration has been
-  run yet."
-  [version]
-  (jdbc/with-query-results result-set
-    [(format "SELECT * FROM %s WHERE version = ?" (jdbc/as-identifier *migration-table*))
-     (to-timestamp version)]
-    (if-let [migration (first result-set)]
-      (-> (update-in migration [:created-at] to-date-time)
-          (update-in [:version] to-date-time)))))
-
-(defn select-current-version
-  "Returns the current schema version, or nil if no migration has been
-  run yet."
-  []
-  (jdbc/with-query-results result-set
-    [(str "SELECT MAX(version) AS version FROM " (jdbc/as-identifier *migration-table*))]
-    (to-date-time (:version (first result-set)))))
-
-(defn migration-table? []
-  "Returns true if the migration-table exists, otherwise false."
-  (try (do (select-current-version) true)
-       (catch SQLException _ false)))
-
-(defn select-migrations []
-  (if (migration-table?)
-    (jdbc/with-query-results result-set
-      [(format "SELECT * FROM %s" (jdbc/as-identifier *migration-table*))]
-      (into [] (map #(assoc %1 :version (to-date-time (:version %1))) result-set)))))
 
 (defn find-applicable-migrations
   "Returns all migrations that have to be run to migrate from
@@ -184,16 +124,16 @@
          (run-up migration)
          (run-down migration))))))
 
-(defn -main [& args]
-  (with-commandline [args args]
-    [[d database "Run the migrations in the database DB." :string "DB"]
-     [h help "Print this help"]
-     [n namespace "Run the migrations in the namespace NS." :string "NS"]]
-    (when (or (blank? database)
-              (blank? namespace))
-      (print-help "migrate [OPTIONS] [VERSION]")
-      (System/exit 1))
-    (with-connection database
-      (run namespace (first args)))))
+;; (defn -main [& args]
+;;   (with-commandline [args args]
+;;     [[d database "Run the migrations in the database DB." :string "DB"]
+;;      [h help "Print this help"]
+;;      [n namespace "Run the migrations in the namespace NS." :string "NS"]]
+;;     (when (or (blank? database)
+;;               (blank? namespace))
+;;       (print-help "migrate [OPTIONS] [VERSION]")
+;;       (System/exit 1))
+;;     (with-connection database
+;;       (run namespace (first args)))))
 
-(comment (apply -main (into-array String ["-n" "migrate.example" "-d" "postgresql://localhost/migrate_test"])))
+;; (comment (apply -main (into-array String ["-n" "migrate.example" "-d" "postgresql://localhost/migrate_test"])))

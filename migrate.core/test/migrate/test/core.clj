@@ -7,6 +7,7 @@
   (:use clojure.test
         environ.core
         migrate.core
+        migrate.sql
         migrate.test))
 
 (deftest test-latest-migration
@@ -34,33 +35,7 @@
     (is (= 'migrate.example.20120817142600-create-continents (:ns (first migrations))))
     (is (= 'migrate.example.20120817142900-create-regions (:ns (last migrations))))))
 
-(dbtest test-create-migration-table
-  (drop-migration-table)
-  (is (create-migration-table)))
-
-(dbtest test-drop-migration-table
-  (is (drop-migration-table)))
-
-(dbtest test-migration-table?
-  (is (migration-table?))
-  (drop-migration-table)
-  (is (not (migration-table?))))
-
-(dbtest test-insert-migration
-  (doseq [migration (find-migrations 'migrate.example)]
-    (insert-migration migration)
-    (is (= (select-current-version) (:version migration)))))
-
-(dbtest test-delete-migration
-  (let [migrations (find-migrations 'migrate.example)]
-    (doall (map insert-migration migrations))
-    (doseq [migration (reverse migrations)]
-      (is (= (select-current-version) (:version migration)))
-      (delete-migration migration)
-      (is (not (= (select-current-version) (:version migration)))))
-    (is (nil? (select-current-version)))))
-
-(dbtest test-find-applicable-migrations
+(deftest test-find-applicable-migrations
   (let [versions (map (fn [v] {:version v}) (map to-date-time ["2010-11-01T21:30:10" "2010-11-02T14:12:45" "2010-11-03T20:11:01"]))]
     (are [from to expected]
       (is (= (map to-date-time expected)
@@ -133,33 +108,6 @@
            (select-current-version)))
     (run ns 0)
     (is (nil? (select-current-version)))))
-
-(dbtest test-select-version
-  (let [migration (first (find-migrations 'migrate.example))]
-    (insert-migration migration)
-    (let [found (select-version (:version migration))]
-      (is (= (:version migration) (:version found) )))))
-
-(dbtest test-select-current-version
-  (is (nil? (select-current-version)))
-  (insert-migration (nth (find-migrations 'migrate.example) 0))
-  (is (= (date-time 2012 8 17 14 26) (select-current-version)))
-  (insert-migration (nth (find-migrations 'migrate.example) 1))
-  (is (= (date-time 2012 8 17 14 28) (select-current-version)))
-  (insert-migration (nth (find-migrations 'migrate.example) 2))
-  (is (= (date-time 2012 8 17 14 29) (select-current-version)))
-  (drop-migration-table)
-  (is (thrown? SQLException (select-current-version))))
-
-(dbtest test-select-migrations
-  (is (= [] (select-migrations)))
-  (doall (map insert-migration (find-migrations 'migrate.example)))
-  (is (= [(date-time 2012 8 17 14 26)
-          (date-time 2012 8 17 14 28)
-          (date-time 2012 8 17 14 29)]
-         (map :version (select-migrations))))
-  (drop-migration-table)
-  (is (nil? (select-migrations))))
 
 (dbtest test-print-migrations
   (print-migrations 'migrate.example)
