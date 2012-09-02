@@ -1,48 +1,52 @@
 (ns leiningen.migrate
-  (:require [leiningen.core.eval :refer [eval-in-project]]
+  (:refer-clojure :exclude [replace])
+  (:require [clojure.string :refer [replace]]
+            [leiningen.core.eval :refer [eval-in-project]]
             [leiningen.help :refer [help-for]]
-            [leinjacker.deps :as deps]))
+            [leinjacker.deps :as deps]
+            [migrate.util :refer [with-base-ns]]
+            leiningen.run))
 
 (defn- add-migrate-deps [project]
   (-> project
-      (deps/add-if-missing '[migrate "0.1.0-SNAPSHOT"])))
+      (deps/add-if-missing '[migrate/migrate.core "0.1.0-SNAPSHOT"])))
+
+(defn run-migrate [project command & args]
+  (apply leiningen.run/run (add-migrate-deps project) "-m" "migrate.tool" (name command) (map str args)))
 
 (defn new
-  "Create a new database migration for `db-name`."
-  [project & args]
-  (eval-in-project
-   (add-migrate-deps project)
-   `(apply migrate.task.new/new '~project '~args)
-   '(require 'migrate.task.new)))
+  "Create a new database migration."
+  [project db-name & args]
+  (with-base-ns [project db-name base-ns]
+    (apply run-migrate project :new
+           "--directory" (first (:source-paths project))
+           "--namespace" base-ns
+           args)))
 
 (defn status
   "Show the database migration status."
-  [project]
-  (prn "status")
-  ;; (eval-in-project
-  ;;  (extended-project project)
-  ;;  `(migrate.tasks/print-migrations '~project)
-  ;;  '(require 'migrate.tasks))
-  )
+  [project db-name]
+  (with-base-ns [project db-name base-ns]
+    (run-migrate project :status
+                 "--database" db-name
+                 "--namespace" base-ns)))
 
 (defn run
-  "Run pending database migrations."
-  [project & [version]]
-  ;; (eval-in-project
-  ;;  (extended-project project)
-  ;;  `(migrate.tasks/run-migrations '~project '~version)
-  ;;  '(require 'migrate.tasks))
-  )
+  "Run the database migrations."
+  [project & args]
+  (let [[db-name & [version]] args]
+    (with-base-ns [project db-name base-ns]
+      (apply run-migrate project :run
+             "--database" db-name
+             "--namespace" base-ns
+             (if version ["--version" version])))))
 
 (defn migrate
   "Run database migrations."
   {:help-arglists '([new status run])
    :subtasks [#'new #'status #'run]}
-  ([project]
-     (run project nil))
-  ([project subtask & args]
-     (cond
-      (= "new" subtask) (apply new project args)
-      (= "run" subtask) (apply run project args)
-      (= "status" subtask) (status project)
-      :else (println (help-for subtask)))))
+  [project & [subtask & args]]
+  (condp = subtask
+    "new" (apply new project args)
+    "status" (apply status project args)
+    "run" (apply run project args)))
